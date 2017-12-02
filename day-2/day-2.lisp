@@ -20,11 +20,13 @@
 (defun min-and-max (numbers)
   (list (apply #'min numbers) (apply #'max numbers)))
 
+(defun get-nums ()
+  (parse-strings-in-lines (split-lines-on-tabs (read-input-file))))
+
 (defun solve-part-1 ()
-  (let ((nums (parse-strings-in-lines
-			   (split-lines-on-tabs
-				(read-input-file)))))
-	(loop for (min max) in (mapcar #'min-and-max nums)
-		 sum (- max min))))
+  (loop for (min max) in (mapcar #'min-and-max (get-nums))
+	 sum (- max min)))
+
+
 
 
