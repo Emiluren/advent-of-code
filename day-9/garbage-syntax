@@ -1,0 +1,4 @@
+group = '{' '}' | '{' ( (group | garbage) ',')* (group | garbage) '}'
+garbage = '<' ("!!" | "!>" | '!' random | random)* '>'
+random = '<' | '"' | "'" | 'e' | 'a'
+	   	 | 'i' | 'o' | 'u' | '{' | '}' | ','
