@@ -19,16 +19,29 @@
 (defun mask-16-lowest (n)
   (mask-field (byte 16 0) n))
 
-(defun same-lower-bits-for-n (n a-start b-start)
+(defun same-lower-bits-for-n (n a-generator b-generator)
   (loop for i from 1 to n
 
-	 for a-value = (next-value a-start *a-factor*)
-	 then (next-value a-value *a-factor*)
+	 for a-value = (funcall a-generator)
+	 then (funcall a-generator a-value)
 
-	 for b-value = (next-value b-start *b-factor*)
-	 then (next-value b-value *b-factor*)
+	 for b-value = (funcall b-generator)
+	 then (funcall b-generator b-value)
 
-	 count (eql (mask-16-lowest a-value) (mask-16-lowest b-value))))
+	 count (eql (mask-16-lowest a-value)
+				(mask-16-lowest b-value))))
+
+(defun part-1-a-generator (&optional old-value)
+  (if old-value
+	(next-value old-value *a-factor*)
+	(next-value 679 *a-factor*)))
+
+(defun part-1-b-generator (&optional old-value)
+  (if old-value
+	(next-value old-value *b-factor*)
+	(next-value 771 *b-factor*)))
 
 (defun solve-part-1 ()
-  (same-lower-bits-for-n 40000000 679 771))
+  (same-lower-bits-for-n 40000000
+						 #'part-1-a-generator
+						 #'part-1-b-generator))
