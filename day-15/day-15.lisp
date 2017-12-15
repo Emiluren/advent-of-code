@@ -45,3 +45,21 @@
   (same-lower-bits-for-n 40000000
 						 #'part-1-a-generator
 						 #'part-1-b-generator))
+
+(defun run-until-divisible-by (generator divisor &optional old-value)
+  (loop for val = (funcall generator old-value)
+	 then (funcall generator val)
+
+	 until (eql (mod val divisor) 0)
+	 finally (return val)))
+
+(defun part-2-a-generator (&optional old-value)
+  (run-until-divisible-by #'part-1-a-generator 4 old-value))
+
+(defun part-2-b-generator (&optional old-value)
+  (run-until-divisible-by #'part-1-b-generator 8 old-value))
+
+(defun solve-part-2 ()
+  (same-lower-bits-for-n 5000000
+						 #'part-2-a-generator
+						 #'part-2-b-generator))
