@@ -32,7 +32,7 @@ fn main() -> std::io::Result<()> {
 
     // Simulate until crash
     'outer: loop {
-        carts.sort_by(|c1, c2| {
+        carts.sort_unstable_by(|c1, c2| {
             let (x1, y1) = c1.pos;
             let (x2, y2) = c2.pos;
 
@@ -43,8 +43,13 @@ fn main() -> std::io::Result<()> {
                 o => o
             }
         });
+        let mut to_remove = Vec::new();
 
         for i in 0..carts.len() {
+            if to_remove.contains(&i) {
+                continue;
+            }
+
             let (x, y) = carts[i].pos;
 
             let tile = input_lines[y as usize][x as usize];
@@ -98,30 +103,52 @@ fn main() -> std::io::Result<()> {
                 _ => panic!("unknown dir {}", carts[i].dir)
             };
 
-            for j in i..carts.len() {
+            for j in 0..carts.len() {
                 let (x2, y2) = carts[j].pos;
 
-                if x == x2 && y == y2 {
-                    println!("First crash at {},{}", x, y);
-                    break 'outer;
+                if i != j && x == x2 && y == y2 && !to_remove.contains(&j) {
+                    println!("crash at {},{}", x, y);
+                    //break 'outer;
+                    to_remove.push(i);
+                    to_remove.push(j);
                 }
             }
         }
 
-        // for y in input_lines.len() {
-        //     'line: for x in input_lines[y].len() {
-        //         for i in 0..carts.len() {
-        //             let (cx, cy) = carts[i].pos;
-        //             if cx == x && cy == y {
-        //                 print!("{}", carts[i].dir);
-        //                 continue 'line;
-        //             }
-        //         }
-        //         print!("{}", input_lines[y][x])
-        //     }
-        //     println!();
-        // }
+        to_remove.sort_unstable_by(|a, b| b.cmp(a));
+        for rem_index in to_remove {
+            carts.remove(rem_index);
+        }
+        if carts.len() == 1 {
+            println!("Last cart at {:?}", carts[0].pos);
+            break 'outer;
+        }
+        //print_state(&input_lines, &carts);
     }
 
     Ok(())
+}
+
+fn print_state(input_lines: &Vec<Vec<char>>, carts: &Vec<Cart>) {
+    for y in 0..input_lines.len() {
+        'line: for x in 0..input_lines[y].len() {
+            for i in 0..carts.len() {
+                let (cx, cy) = carts[i].pos;
+                if cx == x && cy == y {
+                    print!("{}", carts[i].dir);
+                    continue 'line;
+                }
+            }
+            print!("{}", match input_lines[y][x] {
+                        'v' => '|',
+                        '^' => '|',
+                        '<' => '-',
+                        '>' => '-',
+                        c => c,
+                    })
+        }
+        println!();
+    }
+
+    std::thread::sleep(std::time::Duration::from_millis(100));
 }
