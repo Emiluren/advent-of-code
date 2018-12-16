@@ -32,8 +32,6 @@
 (defn index-of-seq [s]
   (loop [state start-state
          index 0]
-    (when (= (mod index 1000) 0)
-      (prn index))
     (cond
       (< (count (:board state)) (+ index 10))
       (recur (run-iteration state) index)
