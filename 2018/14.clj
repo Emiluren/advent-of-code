@@ -25,7 +25,9 @@
 (def input 990941)
 
 (defn part-1 []
-  (take 10 (drop input (:board (run-until-length (+ input 10))))))
+  (subvec (:board (run-until-length (+ input 10)))
+          input
+          (+ input 10)))
 
 (def input-sequence [9 9 0 9 4 1])
 
