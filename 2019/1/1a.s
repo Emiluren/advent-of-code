@@ -8,27 +8,27 @@ values: DD 119031, 111204, 75773, 95544, 69987, 147194, 74024, 100438, 86116, 89
 formatstr: DB "%d", 0xA, 0
 
 section .text
-main:   mov esi, 0              ; rsi (second argument) will contain the resulting sum
-        mov ebx, 0              ; current element
+main:   mov rsi, 0              ; rsi (second argument) will contain the resulting sum
+        mov rbx, 0              ; current element
 
         ;; Do the main calculations
-loop:   mov edx, 0              ; edx:eax is always the location used for the dividend
+loop:   mov rdx, 0              ; edx:eax is always the location used for the dividend
         mov eax, [values + ebx*4] ; Because the values are 32 bit, we need to index by ebx*4
-        mov ecx, 3              ; The divisor needs to be stored in a register
-        div ecx
-        sub eax, 2
-        add esi, eax
+        mov rcx, 3              ; The divisor needs to be stored in a register
+        div rcx
+        sub rax, 2
+        add rsi, rax
 
-        inc ebx
-        cmp ebx, 100
+        inc rbx
+        cmp rbx, 100
         jne loop
 
-        lea edi, [formatstr]
-        mov eax, 0
+        lea rdi, [formatstr]
+        mov rax, 0
         call printf
 
-        mov eax, 60             ; system call for exit
-        mov edi, 0
+        mov rax, 60             ; system call for exit
+        mov rdi, 0
         syscall
 
         
