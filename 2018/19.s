@@ -30,7 +30,7 @@ _skipone:
         ; gtrr 1 4 5
         ; addr 5 2 2
         jmp _program1
-        mulr 2 2 2
+        jmp _end
 _skip:
         addi 4 2 4
         mulr 4 4 4
@@ -51,3 +51,4 @@ _skip:
         addr 4 5 4
         seti 0 0
         seti 0 2
+_end:
