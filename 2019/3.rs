@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 enum Dir { R(i32), D(i32), U(i32), L(i32) }
 use Dir::*;
@@ -36,26 +36,39 @@ fn main() {
     let crossed1 = crossed_tiles(&wire1);
     let crossed2 = crossed_tiles(&wire2);
 
-    let intersect: Vec<_> = crossed1.intersection(&crossed2).collect();
+    let crossed1_positions: HashSet<_> = crossed1.keys().collect();
+    let crossed2_positions: HashSet<_> = crossed2.keys().collect();
+
+    let intersect: Vec<_> = crossed1_positions.intersection(&crossed2_positions).collect();
 
     let mut min_dist = std::i32::MAX;
-    for (x, y) in &intersect {
+    let mut min_cost = std::i32::MAX;
+    for pos in &intersect {
+        let (x, y) = pos;
         let dist = x.abs() + y.abs();
         if dist < min_dist {
             min_dist = dist;
         }
+
+        let cost = crossed1[pos] + crossed2[pos];
+        if cost < min_cost {
+            min_cost = cost;
+        }
     }
-    println!("{}", min_dist);
+    println!("part 1: {}", min_dist);
+    println!("part 2: {}", min_cost);
 }
 
-fn crossed_tiles(segments: &[Dir]) -> HashSet<(i32, i32)> {
-    let mut crossed = HashSet::new();
+fn crossed_tiles(segments: &[Dir]) -> HashMap<(i32, i32), i32> {
+    let mut crossed = HashMap::new();
     let mut pos = (0, 0);
+    let mut dist = 0;
 
     for seg in segments {
         for _ in 0..seg.len() {
+            dist += 1;
             pos = seg.step_one(pos);
-            crossed.insert(pos);
+            crossed.insert(pos, dist);
         }
     }
 
