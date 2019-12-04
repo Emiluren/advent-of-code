@@ -1,8 +1,10 @@
-(defun digits (num digs)
-  (if (< num 10)
-      (cons num digs)
-      (multiple-value-bind (quot rem) (floor num 10)
-        (digits quot (cons rem digs)))))
+(defun digits (num)
+  (labels ((digits-helper (num digs)
+             (if (< num 10)
+                 (cons num digs)
+                 (multiple-value-bind (quot rem) (floor num 10)
+                   (digits-helper quot (cons rem digs))))))
+    (digits-helper num nil)))
 
 (defun group-lengths (digs)
   (if (endp digs)
@@ -24,7 +26,7 @@
 
 (defun solve ()
   (loop for i from 172851 upto 675869
-     for digs = (digits i nil)
+     for digs = (digits i)
      count (meets-criteria-a digs) into sol-a
      count (meets-criteria-b digs) into sol-b
      finally (return (values sol-a sol-b))))
