@@ -3,90 +3,60 @@ fn main() {
         3,225,1,225,6,6,1100,1,238,225,104,0,101,20,183,224,101,-63,224,224,4,224,1002,223,8,223,101,6,224,224,1,223,224,223,1101,48,40,225,1101,15,74,225,2,191,40,224,1001,224,-5624,224,4,224,1002,223,8,223,1001,224,2,224,1,223,224,223,1101,62,60,225,1102,92,15,225,102,59,70,224,101,-885,224,224,4,224,1002,223,8,223,101,7,224,224,1,224,223,223,1,35,188,224,1001,224,-84,224,4,224,102,8,223,223,1001,224,2,224,1,223,224,223,1001,66,5,224,1001,224,-65,224,4,224,102,8,223,223,1001,224,3,224,1,223,224,223,1002,218,74,224,101,-2960,224,224,4,224,1002,223,8,223,1001,224,2,224,1,224,223,223,1101,49,55,224,1001,224,-104,224,4,224,102,8,223,223,1001,224,6,224,1,224,223,223,1102,43,46,225,1102,7,36,225,1102,76,30,225,1102,24,75,224,101,-1800,224,224,4,224,102,8,223,223,101,2,224,224,1,224,223,223,1101,43,40,225,4,223,99,0,0,0,677,0,0,0,0,0,0,0,0,0,0,0,1105,0,99999,1105,227,247,1105,1,99999,1005,227,99999,1005,0,256,1105,1,99999,1106,227,99999,1106,0,265,1105,1,99999,1006,0,99999,1006,227,274,1105,1,99999,1105,1,280,1105,1,99999,1,225,225,225,1101,294,0,0,105,1,0,1105,1,99999,1106,0,300,1105,1,99999,1,225,225,225,1101,314,0,0,106,0,0,1105,1,99999,1008,226,226,224,1002,223,2,223,1005,224,329,1001,223,1,223,8,226,677,224,102,2,223,223,1006,224,344,1001,223,1,223,1007,226,677,224,1002,223,2,223,1005,224,359,101,1,223,223,1008,677,226,224,102,2,223,223,1006,224,374,1001,223,1,223,1107,226,677,224,1002,223,2,223,1006,224,389,1001,223,1,223,107,677,677,224,1002,223,2,223,1006,224,404,101,1,223,223,1007,226,226,224,1002,223,2,223,1006,224,419,101,1,223,223,7,677,226,224,1002,223,2,223,1005,224,434,1001,223,1,223,1007,677,677,224,1002,223,2,223,1006,224,449,101,1,223,223,107,226,226,224,1002,223,2,223,1006,224,464,1001,223,1,223,1108,677,677,224,1002,223,2,223,1005,224,479,101,1,223,223,8,677,226,224,1002,223,2,223,1006,224,494,101,1,223,223,7,226,677,224,102,2,223,223,1005,224,509,1001,223,1,223,1107,677,226,224,102,2,223,223,1005,224,524,1001,223,1,223,1108,677,226,224,1002,223,2,223,1005,224,539,1001,223,1,223,1108,226,677,224,102,2,223,223,1006,224,554,101,1,223,223,108,226,677,224,102,2,223,223,1005,224,569,1001,223,1,223,8,677,677,224,1002,223,2,223,1005,224,584,101,1,223,223,108,677,677,224,1002,223,2,223,1005,224,599,1001,223,1,223,108,226,226,224,102,2,223,223,1006,224,614,101,1,223,223,1008,677,677,224,102,2,223,223,1006,224,629,1001,223,1,223,107,226,677,224,102,2,223,223,1006,224,644,101,1,223,223,1107,677,677,224,1002,223,2,223,1005,224,659,1001,223,1,223,7,226,226,224,1002,223,2,223,1005,224,674,101,1,223,223,4,223,99,226
     ];
 
-    let mut input = original_input.clone();
     println!("Part 1");
-    let mut i = 0;
-    loop {
-        let op = input[i] % 100;
-        let mode1 = (input[i] / 100) % 10;
-        let mode2 = input[i] / 1000;
-        match op {
-            1 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = get_data(&input, mode1, in1) + get_data(&input, mode2, in2);
-                i += 4;
-            }
-            2 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = get_data(&input, mode1, in1) * get_data(&input, mode2, in2);
-                i += 4;
-            }
-            3 => {
-                let pos = input[i+1];
-                println!("inputting 1");
-                input[pos as usize] = 1;
-                i += 2;
-            }
-            4 => {
-                println!("{}", get_data(&input, mode1, input[i+1]));
-                i += 2;
-            }
-            99 => {
-                break;
-            }
-            _ => {
-                panic!("Unknown op code {}", op);
-            }
-        }
-    }
+    run_program(&original_input, 1);
 
-    let mut input = original_input.clone();
     println!("\nPart 2");
+    run_program(&original_input, 5);
+}
+
+fn run_program(initial_memory: &[isize; 678], input: isize) {
+    let mut memory = initial_memory.clone();
     let mut i = 0;
     loop {
-        let op = input[i] % 100;
-        let mode1 = (input[i] / 100) % 10;
-        let mode2 = input[i] / 1000;
+        let op = memory[i] % 100;
+        let mode1 = (memory[i] / 100) % 10;
+        let mode2 = memory[i] / 1000;
         match op {
             1 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = get_data(&input, mode1, in1) + get_data(&input, mode2, in2);
+                let (in1, in2, out) = (memory[i+1], memory[i+2], memory[i+3]);
+                memory[out as usize] = get_data(&memory, mode1, in1) + get_data(&memory, mode2, in2);
                 i += 4;
             }
             2 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = get_data(&input, mode1, in1) * get_data(&input, mode2, in2);
+                let (in1, in2, out) = (memory[i+1], memory[i+2], memory[i+3]);
+                memory[out as usize] = get_data(&memory, mode1, in1) * get_data(&memory, mode2, in2);
                 i += 4;
             }
             3 => {
-                let pos = input[i+1];
-                println!("inputting 5");
-                input[pos as usize] = 5;
+                let pos = memory[i+1];
+                println!("inputting {}", input);
+                memory[pos as usize] = input;
                 i += 2;
             }
             4 => {
-                println!("{}", get_data(&input, mode1, input[i+1]));
+                println!("{}", get_data(&memory, mode1, memory[i+1]));
                 i += 2;
             }
             5 => {
-                let (in1, in2) = (input[i+1], input[i+2]);
-                if get_data(&input, mode1, in1) != 0 {
-                    i = get_data(&input, mode2, in2) as usize;
+                let (in1, in2) = (memory[i+1], memory[i+2]);
+                if get_data(&memory, mode1, in1) != 0 {
+                    i = get_data(&memory, mode2, in2) as usize;
                 } else {
                     i += 3;
                 }
             }
             6 => {
-                let (in1, in2) = (input[i+1], input[i+2]);
-                if get_data(&input, mode1, in1) == 0 {
-                    i = get_data(&input, mode2, in2) as usize;
+                let (in1, in2) = (memory[i+1], memory[i+2]);
+                if get_data(&memory, mode1, in1) == 0 {
+                    i = get_data(&memory, mode2, in2) as usize;
                 } else {
                     i += 3;
                 }
             }
             7 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = if get_data(&input, mode1, in1) < get_data(&input, mode2, in2) {
+                let (in1, in2, out) = (memory[i+1], memory[i+2], memory[i+3]);
+                memory[out as usize] = if get_data(&memory, mode1, in1) < get_data(&memory, mode2, in2) {
                     1
                 } else {
                     0
@@ -94,8 +64,8 @@ fn main() {
                 i += 4;
             }
             8 => {
-                let (in1, in2, out) = (input[i+1], input[i+2], input[i+3]);
-                input[out as usize] = if get_data(&input, mode1, in1) == get_data(&input, mode2, in2) {
+                let (in1, in2, out) = (memory[i+1], memory[i+2], memory[i+3]);
+                memory[out as usize] = if get_data(&memory, mode1, in1) == get_data(&memory, mode2, in2) {
                     1
                 } else {
                     0
@@ -112,9 +82,9 @@ fn main() {
     }
 }
 
-fn get_data(data: &[isize], mode: isize, parameter: isize) -> isize {
+fn get_data(memory: &[isize], mode: isize, parameter: isize) -> isize {
     match mode {
-        0 => data[parameter as usize],
+        0 => memory[parameter as usize],
         1 => parameter,
         _ => panic!("invalid addressing mode {}", mode)
     }
