@@ -5,15 +5,24 @@
 (loop for (parent . child) in +input+
    do (setf (gethash child *parent-table*) parent))
 
-(defun count-parents (node)
+(defun get-parents (node)
   (let ((p (gethash node *parent-table*)))
     (if p
-        (1+ (count-parents p))
-        0)))
+        (cons p (get-parents p))
+        nil)))
 
 (defun solve-a ()
   (loop for node being the hash-keys in *parent-table*
-     sum (count-parents node)))
+     sum (length (get-parents node))))
+
+(defun solve-b ()
+  (let ((you-parents (get-parents 'you))
+        (san-parents (get-parents 'san)))
+    (loop for node in you-parents
+       for i from 0
+       do (let ((common-ancestor (position node san-parents)))
+            (when common-ancestor
+              (return (+ i common-ancestor)))))))
 
 
 ;; Below is just some code that makes a hash table that contains a list of
