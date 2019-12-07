@@ -2,16 +2,16 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
 
 fn main() {
-    let original_input: [isize; 499] = [
+    let original_input = vec![
         3,8,1001,8,10,8,105,1,0,0,21,42,51,60,77,94,175,256,337,418,99999,3,9,1001,9,4,9,102,5,9,9,1001,9,3,9,102,5,9,9,4,9,99,3,9,102,2,9,9,4,9,99,3,9,1001,9,3,9,4,9,99,3,9,101,4,9,9,1002,9,4,9,101,5,9,9,4,9,99,3,9,1002,9,5,9,101,3,9,9,102,2,9,9,4,9,99,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,99,3,9,1001,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,101,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,99,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,3,9,101,2,9,9,4,9,99,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,101,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,1,9,9,4,9,99
     ];
 
     let phases = [0, 1, 2, 3, 4];
+    let phase_permutations = permutations(phases);
 
     let mut max_v = 0;
-    for phase_perm in permutations(phases) {
+    for phase_perm in &phase_permutations {
         let (mut sender, mut receiver) = channel();
-        let mut threads = Vec::new();
 
         for i in 0..5 {
             let (new_sender, new_receiver) = channel();
@@ -22,9 +22,10 @@ fn main() {
             }
 
             let thread_sender = new_sender.clone();
-            threads.push(thread::spawn(move|| {
-                run_program(&original_input, receiver, thread_sender);
-            }));
+            let memory = original_input.clone();
+            thread::spawn(move || {
+                run_program(memory, receiver, thread_sender);
+            });
 
             sender = new_sender;
             receiver = new_receiver;
@@ -33,9 +34,60 @@ fn main() {
         max_v = max_v.max(receiver.recv().unwrap());
     }
     println!("Part 1: {}", max_v);
+
+    let mut max_v = 0;
+    for phase_perm in &phase_permutations {
+        let phase_perm: Vec<_> = phase_perm.iter().map(|x| x + 5).collect();
+        let (mut sender, mut receiver) = channel();
+        let mut threads = Vec::new();
+
+        let first_sender = sender.clone();
+
+        let (new_sender, new_receiver) = channel();
+
+        sender.send(phase_perm[0]).unwrap();
+        sender.send(0).unwrap();
+
+        let thread_sender = new_sender.clone();
+        let memory = original_input.clone();
+        threads.push(thread::spawn(move || {
+            run_program(memory, receiver, thread_sender);
+        }));
+
+        sender = new_sender;
+        receiver = new_receiver;
+
+        for i in 1..5 {
+            let (new_sender, new_receiver) = channel();
+
+            sender.send(phase_perm[i]).unwrap();
+
+            let thread_sender = new_sender.clone();
+            let memory = original_input.clone();
+            threads.push(thread::spawn(move || {
+                run_program(memory, receiver, thread_sender);
+            }));
+
+            sender = new_sender;
+            receiver = new_receiver;
+        }
+
+        let mut last_val = 0;
+        for end_val in receiver.iter() {
+            last_val = end_val;
+            if let Err(_) = first_sender.send(end_val) {
+                break;
+            }
+        }
+        if last_val > max_v {
+            max_v = last_val;
+        }
+    }
+    println!("Part 2: {}", max_v);
 }
 
 fn permutations(mut values: [isize; 5]) -> Vec<[isize; 5]> {
+    // Heap's algorithm
     let mut permuts = Vec::new();
     permuts.push(values.clone());
     let mut c = vec![0; values.len()];
@@ -61,8 +113,7 @@ fn permutations(mut values: [isize; 5]) -> Vec<[isize; 5]> {
     permuts
 }
 
-fn run_program(initial_memory: &[isize; 499], input: Receiver<isize>, output: Sender<isize>) {
-    let mut memory = initial_memory.clone();
+fn run_program(mut memory: Vec<isize>, input: Receiver<isize>, output: Sender<isize>) {
     let mut i = 0;
     loop {
         let op = memory[i] % 100;
