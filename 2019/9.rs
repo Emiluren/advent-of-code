@@ -10,6 +10,9 @@ fn main() {
 
     println!("Part 1");
     run_program(&input_map, 1);
+
+    println!("\nPart 2");
+    run_program(&input_map, 2);
 }
 
 fn print_memory(memory: &HashMap<i64, i64>) {
