@@ -17,8 +17,13 @@ fn main() {
     let input_map = original_input.iter().enumerate()
         .map(|(i, v)| (i as i64, *v)).collect();
 
-    let canvas = run_program(&input_map);
+    let mut canvas = HashMap::new();
+    run_program(&input_map, &mut canvas);
     println!("Part 1: {}", canvas.keys().count());
+
+    let mut canvas = HashMap::new();
+    canvas.insert((0, 0), true);
+    run_program(&input_map, &mut canvas);
 
     let mut min_x = 0;
     let mut min_y = 0;
@@ -34,7 +39,7 @@ fn main() {
 
     println!("Part 2:");
     for y in min_y ..= max_y {
-        for x in min_x ..= max_y {
+        for x in min_x ..= max_x {
             if canvas.get(&(x, y)) == Some(&true) {
                 print!("X");
             } else {
@@ -53,7 +58,7 @@ fn print_memory(memory: &HashMap<i64, i64>) {
     println!();
 }
 
-fn run_program(initial_memory: &HashMap<i64, i64>) -> HashMap<(i32, i32), bool> {
+fn run_program(initial_memory: &HashMap<i64, i64>, canvas: &mut HashMap<(i32, i32), bool>) {
     let mut memory = initial_memory.clone();
     let mut relative_base = 0;
     let mut i = 0;
@@ -82,7 +87,6 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> HashMap<(i32, i32), bool> 
 
     let mut pos = (0, 0);
     let mut next_output_state = OutputState::Paint;
-    let mut canvas = HashMap::new();
     let mut dir = Dir::Up;
 
     loop {
@@ -205,6 +209,4 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> HashMap<(i32, i32), bool> 
             }
         }
     }
-
-    return canvas;
 }
