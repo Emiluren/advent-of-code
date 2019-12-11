@@ -114,9 +114,9 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> HashMap<(i32, i32), bool> 
             }
             3 => {
                 let input = if *canvas.get(&pos).unwrap_or(&false) {
-                    0
-                } else {
                     1
+                } else {
+                    0
                 };
                 let mem_pos = memory[&(i+1)];
                 set_data!(mode1, mem_pos, input);
