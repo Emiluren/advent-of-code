@@ -1,5 +1,7 @@
+use std::collections::HashSet;
+
 fn main() {
-    let input: Vec<Vec<bool>> = [
+    let input = [
         [1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0],
         [0,1,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,1,0,1],
         [0,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1,1,0,0,1,1],
@@ -21,9 +23,16 @@ fn main() {
         [1,0,0,1,0,1,1,1,1,0,1,1,1,1,1,1,0,0,1,1,1],
         [0,0,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1],
         [0,0,1,1,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1],
-    ].iter().map(
-        |row| row.iter().map(|i| *i == 1).collect()
-    ).collect();
+    ];
+
+    let mut input_set = HashSet::new();
+    for row in 0..input.len() {
+        for col in 0..input[0].len() {
+            if input[row][col] == 1 {
+                input_set.insert((row, col));
+            }
+        }
+    }
 
     let mut max_asteroids = 0;
     for row in 0..input.len() {
