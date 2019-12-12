@@ -8,7 +8,10 @@
    :y [0 -10 -8 5]
    :z [2 -7 8 -1]})
 
-(def test-input2 [(v -8 -10 0) (v 5 5 10) (v 2 -7 3) (v 9 -8 -3)])
+(def test-input2
+  {:x [-8 5 2 9]
+   :y [-10 5 -7 -8]
+   :z [ 0 10 3 -3]})
 
 (defn initial-component-state [xs]
   {:pos xs :vel [0 0 0 0]})
@@ -59,3 +62,29 @@
   (calc-energy (nth (iterate step-state
                              start-state)
                     1000)))
+
+(defn find-index [x xs]
+  (loop [n 0, s xs]
+    (cond (not (seq s)) nil
+          (= x (first s)) n
+          :else (recur (inc n) (rest s)))))
+
+(defn find-period [component-state]
+  (inc (find-index component-state
+                   (rest (iterate step-component
+                                  component-state)))))
+
+(defn gcd [a b]
+  (if (zero? b)
+    a
+    (recur b (mod a b))))
+
+(defn find-period [initial-state]
+  (let [x-period (find-period (:x initial-state))
+        y-period (find-period (:y initial-state))
+        z-period (find-period (:z initial-state))]
+    (/ (* x-period y-period z-period)
+       (gcd (gcd x-period y-period) z-period))))
+
+(defn solve-b []
+  )
