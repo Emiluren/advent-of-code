@@ -1,68 +1,61 @@
-(defn v [x y z]
-  {:x x, :y y, :z z})
+(def input
+  {:x [1 -4 -15 -17]
+   :y [4 -1 -14 1]
+   :z [4 19 12 10]})
 
-(def input [{:x 1, :y 4, :z 4}
-            {:x -4, :y -1, :z 19}
-            {:x -15, :y -14, :z 12}
-            {:x -17, :y 1, :z 10}])
-
-(def test-input1 [{:x -1 :y 0 :z 2}
-                  {:x 2 :y -10 :z -7}
-                  {:x 4 :y -8 :z 8}
-                  {:x 3 :y 5 :z -1}])
+(def test-input1
+  {:x [-1 2 4 3]
+   :y [0 -10 -8 5]
+   :z [2 -7 8 -1]})
 
 (def test-input2 [(v -8 -10 0) (v 5 5 10) (v 2 -7 3) (v 9 -8 -3)])
 
-(defn moon-from-pos [p]
-  {:pos p
-   :vel {:x 0, :y 0, :z 0}})
+(defn initial-component-state [xs]
+  {:pos xs :vel [0 0 0 0]})
 
-(def start-state (mapv moon-from-pos input))
+(defn moons-from-positions [{:keys [x y z]}]
+  {:x (initial-component-state x)
+   :y (initial-component-state y)
+   :z (initial-component-state z)})
+
+(def start-state
+  (moons-from-positions input))
 
 (defn sign [x]
   (cond (> x 0) 1
         (< x 0) -1
         :else 0))
 
-(defn apply-gravity-axis [m1 m2 axis]
-  (update-in m1
-             [:vel axis]
-             +
-             (sign (- (get-in m2 [:pos axis])
-                      (get-in m1 [:pos axis])))))
+(defn apply-gravity-single [xs x]
+  (reduce + (map #(sign (- % x)) xs)))
 
-(defn apply-gravity-all [moons]
-  (map (fn [m1]
-         (reduce (fn [m1 m2]
-                   (-> m1
-                       (apply-gravity-axis m2 :x)
-                       (apply-gravity-axis m2 :y)
-                       (apply-gravity-axis m2 :z)))
-                 m1
-                 moons))
-       moons))
+(defn apply-gravity-all [positions]
+  (map (partial apply-gravity-single positions) positions))
 
-(defn apply-velocity [moons]
-  (map (fn [m]
-         (-> m
-             (update-in [:pos :x] + (get-in m [:vel :x]))
-             (update-in [:pos :y] + (get-in m [:vel :y]))
-             (update-in [:pos :z] + (get-in m [:vel :z]))))
-       moons))
+(defn apply-velocity [positions velocities]
+  (map + positions velocities))
 
-(defn sum-components [{:keys [x y z]}]
-  (+ (Math/abs x)
-     (Math/abs y)
-     (Math/abs z)))
+(defn step-component [{:keys [pos vel]}]
+  (let [acceleration (apply-gravity-all pos)
+        new-vel (map + vel acceleration)]
+    {:pos (apply-velocity pos new-vel)
+     :vel new-vel}))
 
-(defn moon-energy [{:keys [pos vel]}]
-  (* (sum-components pos) (sum-components vel)))
+(defn step-state [{:keys [x y z]}]
+  {:x (step-component x)
+   :y (step-component y)
+   :z (step-component z)})
 
-(defn calc-energy [moons]
-  (reduce + (map moon-energy moons)))
+(defn abs-sum [x y z]
+  (+ (Math/abs x) (Math/abs y) (Math/abs z)))
+
+(defn key-energy [key values]
+  (apply map abs-sum (map key values)))
+
+(defn calc-energy [{:keys [x y z]}]
+  (reduce + (map * (key-energy :pos [x y z]) (key-energy :vel [x y z]))))
 
 (defn solve-a []
-  (calc-energy (nth (iterate (comp apply-velocity
-                                   apply-gravity-all)
+  (calc-energy (nth (iterate step-state
                              start-state)
                     1000)))
