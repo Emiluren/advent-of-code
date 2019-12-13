@@ -79,12 +79,13 @@
     a
     (recur b (mod a b))))
 
-(defn find-period [initial-state]
-  (let [x-period (find-period (:x initial-state))
-        y-period (find-period (:y initial-state))
-        z-period (find-period (:z initial-state))]
-    (/ (* x-period y-period z-period)
-       (gcd (gcd x-period y-period) z-period))))
+(defn lcm [a b]
+  (/ (* a b) (gcd a b)))
+
+(defn find-period-all [initial-state]
+  (lcm (lcm (find-period (:x initial-state))
+            (find-period (:y initial-state)))
+       (find-period (:z initial-state))))
 
 (defn solve-b []
-  )
+  (find-period-all start-state))
