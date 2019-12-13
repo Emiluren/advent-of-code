@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::Scancode;
 
 enum OutputState { X, Y(i32), Tile(i32, i32) }
 
@@ -28,9 +28,6 @@ fn run_program(initial_memory: &HashMap<i64, i64>) {
     let mut output_state = OutputState::X;
 
     let mut walls_to_paint = 86;
-
-    let mut ball_x = 0;
-    let mut paddle_x = 0;
 
     macro_rules! get_data {
         ($mode:expr, $parameter:expr) => {
@@ -71,8 +68,7 @@ fn run_program(initial_memory: &HashMap<i64, i64>) {
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                Event::Quit {..} => {
                     break 'running
                 },
                 _ => {}
@@ -107,13 +103,14 @@ fn run_program(initial_memory: &HashMap<i64, i64>) {
             }
             3 => {
                 let pos = memory[&(i+1)];
-                let input = if ball_x > paddle_x {
-                    1
-                } else if ball_x < paddle_x {
-                    -1
-                } else {
-                    0
-                };
+                let keyboard_state = event_pump.keyboard_state();
+                let mut input = 0;
+                if keyboard_state.is_scancode_pressed(Scancode::A) {
+                    input -= 1;
+                }
+                if keyboard_state.is_scancode_pressed(Scancode::D) {
+                    input += 1;
+                }
                 set_data!(mode1, pos, input);
                 i += 2;
             }
@@ -147,14 +144,6 @@ fn run_program(initial_memory: &HashMap<i64, i64>) {
 
                             if output == 1 {
                                 walls_to_paint -= 1;
-                            }
-
-                            if output == 4 {
-                                ball_x = x;
-                            }
-
-                            if output == 3 {
-                                paddle_x = x;
                             }
                         }
                     }
@@ -210,7 +199,7 @@ fn run_program(initial_memory: &HashMap<i64, i64>) {
         }
 
         if walls_to_paint == 0 {
-            ::std::thread::sleep(Duration::new(0, 10_000u32));
+            ::std::thread::sleep(Duration::new(0, 2_000_000u32));
         }
     }
     ::std::thread::sleep(Duration::new(0, 1_000_000_000u32));
