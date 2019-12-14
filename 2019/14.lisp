@@ -23,3 +23,17 @@
                sum (required-ore-for (* reaction-amount input-amount)
                                      input
                                      leftover-ingredients)))))))
+
+(defun solve-a ()
+  (required-ore-for 1 'fuel (make-hash-table)))
+
+(defun find-max-fuel (min-lim max-lim)
+  (if (>= min-lim (1- max-lim))
+      min-lim
+      (let ((middle (floor (+ min-lim max-lim) 2)))
+        (if (> (required-ore-for middle 'fuel (make-hash-table)) (expt 10 12))
+            (find-max-fuel min-lim (1- middle))
+            (find-max-fuel middle max-lim)))))
+
+(defun solve-b ()
+  (find-max-fuel 1 (expt 10 12)))
