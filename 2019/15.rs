@@ -21,6 +21,23 @@ fn main() {
 
     print_map(&map, &[]);
     println!("Minimum steps {}", find_path((0, 0), &[oxygen_pos], &map).len());
+
+    println!("Part 2: {}", deepest_point(&map, oxygen_pos, oxygen_pos));
+}
+
+fn deepest_point(map: &HashMap<(i32, i32), Tile>, pos: (i32, i32), came_from: (i32, i32)) -> u32 {
+    let mut deepest_child = 0;
+
+    for (adj, _) in &adjacent_positions(pos) {
+        if map.get(adj) == Some(&Floor) && *adj != came_from {
+            let child_depth = deepest_point(map, *adj, pos) + 1;
+            if child_depth > deepest_child {
+                deepest_child = child_depth;
+            }
+        }
+    }
+
+    return deepest_child;
 }
 
 fn print_map(map: &HashMap<(i32, i32), Tile>, highlights: &[(i32, i32)]) {
