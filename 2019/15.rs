@@ -20,7 +20,7 @@ fn main() {
     let (map, oxygen_pos) = run_program(&input_map);
 
     print_map(&map, &[]);
-    println!("Minimum steps {}", find_path((0, 0), oxygen_pos, &map).len());
+    println!("Minimum steps {}", find_path((0, 0), &[oxygen_pos], &map).len());
 }
 
 fn print_map(map: &HashMap<(i32, i32), Tile>, highlights: &[(i32, i32)]) {
@@ -71,7 +71,7 @@ fn adjacent_positions((x, y): (i32, i32)) -> [((i32, i32), Dir); 4] {
 }
 
 fn find_path(
-    start_pos: (i32, i32), end_pos: (i32, i32), map: &HashMap<(i32, i32), Tile>
+    start_pos: (i32, i32), end_positions: &[(i32, i32)], map: &HashMap<(i32, i32), Tile>
 ) -> Vec<((i32, i32), Dir)> {
     let mut queue = VecDeque::new();
     let mut discovered = HashSet::new();
@@ -81,7 +81,7 @@ fn find_path(
     queue.push_back(start_pos);
 
     while let Some(pos) = queue.pop_front() {
-        if pos == end_pos {
+        if end_positions.contains(&pos) {
             let mut path = Vec::new();
 
             let mut pos = pos;
@@ -109,8 +109,10 @@ fn find_path(
         }
     }
 
-    print_map(map, &[start_pos, end_pos]);
-    panic!("No path found to {:?} from {:?}", end_pos, start_pos);
+    let mut positions = Vec::from(end_positions);
+    positions.push(start_pos);
+    print_map(map, &positions);
+    panic!("No path found from {:?} to {:?}", end_positions, start_pos);
 }
 
 fn add_adjacent_tiles(
@@ -197,19 +199,13 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> (HashMap<(i32, i32), Tile>
                     }
                     None => {
                         tiles_to_explore.retain(|t| map.get(t) == None);
-                        match tiles_to_explore.pop() {
-                            Some(exploration_goal) => {
-                                if map.get(&exploration_goal) != None {
-                                    panic!("Already found {:?}", exploration_goal);
-                                }
-                                path_to_follow = find_path(robot_position, exploration_goal, &map);
-                                path_to_follow.pop().expect("Could not find a path")
-                            }
-                            None => {
-                                println!("Nothing left to explore");
-                                return (map, oxygen_position.unwrap());
-                            }
+                        if tiles_to_explore.len() == 0 {
+                            println!("Nothing left to explore");
+                            return (map, oxygen_position.unwrap());
                         }
+
+                        path_to_follow = find_path(robot_position, &tiles_to_explore, &map);
+                        path_to_follow.pop().expect("Could not find a path")
                     }
                 };
                 next_position = tile;
@@ -217,7 +213,6 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> (HashMap<(i32, i32), Tile>
                 i += 2;
             }
             4 => {
-                let old_value = map.get(&(next_position)).map(|t| *t);
                 match get_data!(mode1, memory[&(i+1)]) {
                     0 => {
                         map.insert(next_position, Wall);
@@ -236,6 +231,11 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> (HashMap<(i32, i32), Tile>
                         panic!("Unknown output status {}", x);
                     }
                 }
+                // Uncomment the following lines to draw the map as we go
+                //print!("{}[2J", 27 as char);
+                //print_map(&map, &[robot_position]);
+                //std::thread::sleep_ms(100);
+                //println!();
                 i += 2;
             }
             5 => {
