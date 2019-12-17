@@ -38,7 +38,7 @@ func solvePart2() -> String {
         var sum = state.reduce(0) { x, y in x + y }
 
         for (i, oldValue) in state.enumerated() {
-            newState[i] = (sum % 10)
+            newState[i] = sum % 10
             sum -= oldValue
         }
 
