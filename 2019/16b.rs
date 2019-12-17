@@ -3,17 +3,10 @@ fn main() {
     let offset = 5976521;
     let mut state: Vec<i32> = std::iter::repeat(input.iter()).take(10000).flatten().skip(offset).cloned().collect();
 
-    let mut new_state = state.clone();
-
     for _ in 0 .. 100 {
-        let mut sum = state.iter().fold(0, |a, b| a + b);
-
-        for (i, old_value) in state.iter().enumerate() {
-            new_state[i] = sum % 10;
-            sum -= old_value;
+        for i in (0..state.len() - 1).rev() {
+            state[i] = (state[i] + state[i+1]) % 10;
         }
-
-        std::mem::swap(&mut state, &mut new_state);
     }
 
     let mut res_string = String::new();
