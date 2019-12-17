@@ -2,23 +2,50 @@ let input = [5, 9, 7, 6, 5, 2, 1, 6, 6, 3, 4, 9, 5, 2, 1, 4, 7, 7, 3, 5, 4, 1, 9
 
 let pattern = [0, 1, 0, -1]
 
-func pat_elem(_ phase: Int, _ index: Int) -> Int {
-    return (index % phase*4) / phase
+func pat_elem(_ patternIndex: Int, _ index: Int) -> Int {
+    return pattern[index % (patternIndex*4) / patternIndex]
 }
 
-var currentState = input
-for _ in 0 ..< 100 {
-    var newState = [Int]()
-    for index in 0 ..< currentState.count {
-        let phase = index + 1
-
-        var newVal = 0
-        for i in index ..< currentState.count {
-            newVal += currentState[i] * pat_elem(phase, i + 1)
+func solvePart1() -> String {
+    var state = input
+    var newState = state
+    for _ in 0 ..< 100 {
+        for index in 0 ..< state.count {
+            var newVal = 0
+            for i in index ..< state.count {
+                newVal += state[i] * pat_elem(index + 1, i + 1)
+            }
+            newState[index] = abs(newVal) % 10
         }
-        newState.append(abs(newVal) % 10)
+        state = newState
     }
-    currentState = newState
+
+    return state[..<8].map({String($0)}).joined()
 }
 
-print("Part 1: \(currentState[..<8].map({String($0)}).joined())")
+print("Part 1: \(solvePart1())")
+
+
+func solvePart2() -> String {
+    let offset = 5976521
+
+    let bigInput = Array(Array(repeating: input, count: 10000).joined())[offset...]
+
+    var state = Array(bigInput)
+    var newState = state
+
+    for _ in 0 ..< 100 {
+        var sum = state.reduce(0) { x, y in x + y }
+
+        for (i, oldValue) in state.enumerated() {
+            newState[i] = (sum % 10)
+            sum -= oldValue
+        }
+
+        state = newState
+    }
+
+    return state[..<8].map({String($0)}).joined()
+}
+
+print("Part 2: \(solvePart2())")
