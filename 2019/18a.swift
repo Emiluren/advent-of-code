@@ -159,22 +159,63 @@ struct GraphState: Hashable {
 
 let allKeys = Set(input.filter { $0.isLetter && $0.isLowercase })
 
-func breadthFirstSearch() {
+func adjacentPositions(_ pos: (Int, Int)) -> [(Int, Int)] {
+    let (r, c) = pos
+    return [
+        (r, c - 1),
+        (r, c + 1),
+        (r - 1, c),
+        (r + 1, c),
+    ];
+}
+
+func breadthFirstSearch() -> Int? {
     let startState = GraphState()
 
     var queue = Queue<GraphState>()
     var discovered: Set<GraphState> = [startState]
-    var distanceTo = [GraphState; Int]()
+    var distanceTo = [startState: 0]
 
     queue.enqueue(startState)
 
-    while !queue.isEmpty {
-        let state = queue.dequeue()
+    while let state = queue.dequeue() {
+        let stateDist: Int! = distanceTo[state]
 
         if state.keys == allKeys {
-            return distanceTo[state]
+            return stateDist
         }
 
-        // TODO: Push new states to queue
+        for (r, c) in adjacentPositions(state.pos) {
+            var newState = GraphState(pos: (r, c), keys: state.keys)
+            let char = inputMap[r][c]
+            switch char {
+            case "#":
+                continue
+            case "a"..."z":
+                newState.keys.insert(char)
+            case "A"..."Z":
+                let charLower = char.lowercased()
+                if !newState.keys.contains(charLower[charLower.startIndex]) {
+                    continue
+                }
+            case ".", "@":
+                break
+            default:
+                print("Unknown tile \(char)!")
+                continue
+            }
+
+            if discovered.contains(newState) {
+                continue
+            }
+
+            discovered.insert(newState)
+            distanceTo[newState] = stateDist + 1
+            queue.enqueue(newState)
+        }
     }
+
+    return nil
 }
+
+print("Part 1: \(String(describing: breadthFirstSearch()))")
