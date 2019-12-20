@@ -109,6 +109,7 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> Vec<Vec<TileType>> {
             }
             4 => {
                 let next_char = get_data!(mode1, memory[&(i+1)]) as u8 as char;
+                print!("{}", next_char);
                 match next_char {
                     '#' => {
                         current_row.push(Scaffold);
