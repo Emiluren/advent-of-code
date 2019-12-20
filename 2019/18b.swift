@@ -82,12 +82,6 @@ let input = """
   #################################################################################
   """
 
-// let input = """
-// #########
-// #b.A.@.a#
-// #########
-// """
-
 // Queue type comes from https://github.com/raywenderlich/swift-algorithm-club/blob/master/Queue/Queue-Optimized.swift
 // used under the MIT license
 public struct Queue<T> {
@@ -155,6 +149,11 @@ struct GraphState: Hashable {
       (startRow2, startCol2),
     ]
     var keys: Set<Character> = []
+    var movingBot: Int
+
+    init(movingBot: Int) {
+        self.movingBot = movingBot
+    }
 
     static func == (lhs: GraphState, rhs: GraphState) -> Bool {
         for i in 0..<4 {
@@ -166,7 +165,7 @@ struct GraphState: Hashable {
             }
         }
 
-        return lhs.keys == rhs.keys
+        return lhs.keys == rhs.keys && lhs.movingBot == rhs.movingBot
     }
 
     func hash(into hasher: inout Hasher) {
@@ -175,6 +174,7 @@ struct GraphState: Hashable {
             hasher.combine(r)
             hasher.combine(c)
         }
+        hasher.combine(movingBot)
         hasher.combine(keys)
     }
 }
@@ -192,13 +192,16 @@ func adjacentPositions(_ pos: (Int, Int)) -> [(Int, Int)] {
 }
 
 func breadthFirstSearch() -> Int? {
-    let startState = GraphState()
-
     var queue = Queue<GraphState>()
-    var discovered: Set<GraphState> = [startState]
-    var distanceTo = [startState: 0]
+    var distanceTo = [GraphState: Int]()
+    var discovered: Set<GraphState> = []
 
-    queue.enqueue(startState)
+    for i in 0..<4 {
+        let startState = GraphState(movingBot: i)
+        distanceTo[startState] = 0
+        discovered.insert(startState)
+        queue.enqueue(startState)
+    }
 
     while let state = queue.dequeue() {
         let stateDist: Int! = distanceTo[state]
@@ -207,35 +210,47 @@ func breadthFirstSearch() -> Int? {
             return stateDist
         }
 
-        for i in 0..<4 {
-            for (r, c) in adjacentPositions(state.positions[i]) {
-                var newState = state
-                newState.positions[i] = (r, c)
-                let char = inputMap[r][c]
-                switch char {
-                case "#":
-                    continue
-                case "a"..."z":
-                    newState.keys.insert(char)
-                case "A"..."Z":
-                    let charLower = char.lowercased()
-                    if !newState.keys.contains(charLower[charLower.startIndex]) {
-                        continue
-                    }
-                case ".", "@":
-                    break
-                default:
-                    print("Unknown tile \(char)!")
+        func pushNewState(_ newState: GraphState) {
+            if discovered.contains(newState) {
+                return
+            }
+
+            discovered.insert(newState)
+            distanceTo[newState] = stateDist + 1
+            queue.enqueue(newState)
+        }
+
+        for (r, c) in adjacentPositions(state.positions[state.movingBot]) {
+            var newState = state
+            newState.positions[state.movingBot] = (r, c)
+            let char = inputMap[r][c]
+            var foundKey = false
+
+            switch char {
+            case "#":
+                continue
+            case "a"..."z":
+                newState.keys.insert(char)
+                foundKey = true
+            case "A"..."Z":
+                let charLower = char.lowercased()
+                if !newState.keys.contains(charLower[charLower.startIndex]) {
                     continue
                 }
+            case ".", "@":
+                break
+            default:
+                print("Unknown tile \(char)!")
+                continue
+            }
 
-                if discovered.contains(newState) {
-                    continue
+            if foundKey {
+                for i in 0..<4 {
+                    newState.movingBot = i
+                    pushNewState(newState)
                 }
-
-                discovered.insert(newState)
-                distanceTo[newState] = stateDist + 1
-                queue.enqueue(newState)
+            } else {
+                pushNewState(newState)
             }
         }
     }
