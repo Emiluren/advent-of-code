@@ -245,7 +245,7 @@ func adjacentPositions(_ pos: Pair<Int>) -> [Pair<Int>] {
     ];
 }
 
-func breadthFirstSearch() -> Int? {
+func solvePart1() -> Int? {
     let startState = outerPortals[Pair(p1: "A", p2: "A")]!
     let endState = outerPortals[Pair(p1: "Z", p2: "Z")]!
 
@@ -287,4 +287,88 @@ func breadthFirstSearch() -> Int? {
     return nil
 }
 
-print("Part 1: \(String(describing: breadthFirstSearch()))")
+print("Part 1: \(solvePart1()!)")
+
+struct RecursiveState: Hashable {
+    var r: Int
+    var c: Int
+    var level: Int
+
+    init(fromPair pair: Pair<Int>) {
+        r = pair.p1
+        c = pair.p2
+        level = 0
+    }
+
+    init(r: Int, c: Int, level: Int) {
+        self.r = r
+        self.c = c
+        self.level = level
+    }
+
+    static func == (lhs: RecursiveState, rhs: RecursiveState) -> Bool {
+        return lhs.r == rhs.r && lhs.c == rhs.c && lhs.level == rhs.level
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(r)
+        hasher.combine(c)
+        hasher.combine(level)
+    }
+}
+
+func solvePart2() -> Int? {
+    let startState = RecursiveState(fromPair: outerPortals[Pair(p1: "A", p2: "A")]!)
+    let endState = RecursiveState(fromPair: outerPortals[Pair(p1: "Z", p2: "Z")]!)
+
+    var queue = Queue<RecursiveState>()
+    var discovered: Set<RecursiveState> = [startState]
+    var distanceTo = [startState: 0]
+
+    queue.enqueue(startState)
+
+    while let state = queue.dequeue() {
+        let dist: Int! = distanceTo[state]
+
+        if state == endState {
+            return dist
+        }
+
+        let stateAsPair = Pair(p1: state.r, p2: state.c)
+        for newPos in adjacentPositions(stateAsPair) {
+            let newState = RecursiveState(r: newPos.p1, c: newPos.p2, level: state.level)
+            let char = inputMap[newState.r][newState.c]
+
+            if discovered.contains(newState) || char != "." {
+                continue
+            }
+
+            discovered.insert(newState)
+            distanceTo[newState] = dist + 1
+            queue.enqueue(newState)
+        }
+
+        if let teleportedPos = portalLinks[stateAsPair] {
+            let isInner =
+              state.r >= 30 && state.r <= 92 &&
+              state.c >= 30 && state.c <= 84
+
+            var teleportedState = RecursiveState(fromPair: teleportedPos)
+            if isInner {
+                teleportedState.level = state.level + 1
+            } else {
+                teleportedState.level = state.level - 1
+            }
+
+            if !discovered.contains(teleportedState) && teleportedState.level >= 0 {
+                discovered.insert(teleportedState)
+                distanceTo[teleportedState] = dist + 1
+                queue.enqueue(teleportedState)
+            }
+        }
+    }
+
+    return nil
+}
+
+print("Part 2: \(solvePart2()!)")
