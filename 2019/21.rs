@@ -1,13 +1,5 @@
 use std::collections::HashMap;
-use std::io::{self, Read};
 use std::convert::TryInto;
-
-// Program for part 1
-// NOT C J
-// AND D J
-// NOT A T
-// OR T J
-// WALK
 
 fn main() {
     let original_input = vec![
@@ -17,7 +9,27 @@ fn main() {
     let input_map = original_input.iter().enumerate()
         .map(|(i, v)| (i as i64, *v)).collect();
 
-    println!("Part 1: {}", run_program(&input_map));
+    let part_1_program = "NOT C J
+AND D J
+NOT A T
+OR T J
+WALK
+";
+
+    println!("Part 1: {}", run_program(&input_map, part_1_program.chars()));
+
+    let part_2_program = "NOT C J
+AND D J
+AND H J
+NOT B T
+AND D T
+OR T J
+NOT A T
+OR T J
+RUN
+";
+
+    println!("Part 2: {}", run_program(&input_map, part_2_program.chars()));
 }
 
 fn print_memory(memory: &HashMap<i64, i64>) {
@@ -28,7 +40,7 @@ fn print_memory(memory: &HashMap<i64, i64>) {
     println!();
 }
 
-fn run_program(initial_memory: &HashMap<i64, i64>) -> i64 {
+fn run_program(initial_memory: &HashMap<i64, i64>, mut input: impl Iterator<Item=char>) -> i64 {
     let mut memory = initial_memory.clone();
     let mut relative_base = 0;
     let mut i = 0;
@@ -84,9 +96,7 @@ fn run_program(initial_memory: &HashMap<i64, i64>) -> i64 {
             }
             3 => {
                 let pos = memory[&(i+1)];
-                let mut buf = [0];
-                io::stdin().read_exact(&mut buf);
-                set_data!(mode1, pos, buf[0] as i64);
+                set_data!(mode1, pos, input.next().unwrap() as i64);
                 i += 2;
             }
             4 => {
