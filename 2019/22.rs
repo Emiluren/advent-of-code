@@ -1,0 +1,116 @@
+fn main() {
+    let mut cards: Vec<_> = (0..=10_006).collect();
+
+    cards.reverse();
+    deal_with_increment(&mut cards, 57);
+    cards.rotate_right(4643);
+    deal_with_increment(&mut cards, 59);
+    cards.rotate_left(5189);
+    cards.reverse();
+    deal_with_increment(&mut cards, 24);
+    cards.rotate_left(3207);
+    deal_with_increment(&mut cards, 63);
+    cards.rotate_left(3839);
+    deal_with_increment(&mut cards, 53);
+    cards.rotate_right(1014);
+    deal_with_increment(&mut cards, 21);
+    cards.rotate_right(3150);
+    cards.reverse();
+    deal_with_increment(&mut cards, 39);
+    cards.rotate_left(900);
+    deal_with_increment(&mut cards, 6);
+    cards.reverse();
+    deal_with_increment(&mut cards, 65);
+    cards.rotate_left(6108);
+    deal_with_increment(&mut cards, 54);
+    cards.rotate_left(6343);
+    deal_with_increment(&mut cards, 26);
+    cards.reverse();
+    cards.rotate_left(8625);
+    deal_with_increment(&mut cards, 8);
+    cards.rotate_right(1956);
+    cards.reverse();
+    cards.rotate_left(8750);
+    deal_with_increment(&mut cards, 43);
+    cards.rotate_right(2930);
+    deal_with_increment(&mut cards, 10);
+    cards.rotate_right(2359);
+    deal_with_increment(&mut cards, 34);
+    cards.rotate_left(390);
+    deal_with_increment(&mut cards, 46);
+    cards.rotate_left(5467);
+    cards.reverse();
+    cards.rotate_left(61);
+    deal_with_increment(&mut cards, 4);
+    cards.rotate_right(332);
+    cards.reverse();
+    deal_with_increment(&mut cards, 74);
+    cards.rotate_right(2568);
+    deal_with_increment(&mut cards, 54);
+    cards.reverse();
+    deal_with_increment(&mut cards, 47);
+    cards.rotate_right(9034);
+    deal_with_increment(&mut cards, 74);
+    cards.rotate_left(2174);
+    cards.reverse();
+    deal_with_increment(&mut cards, 63);
+    cards.rotate_right(3966);
+    deal_with_increment(&mut cards, 16);
+    cards.rotate_left(1619);
+    deal_with_increment(&mut cards, 43);
+    cards.reverse();
+    cards.rotate_left(2779);
+    cards.reverse();
+    cards.rotate_right(1441);
+    deal_with_increment(&mut cards, 52);
+    cards.rotate_left(362);
+    deal_with_increment(&mut cards, 25);
+    cards.rotate_right(5105);
+    cards.reverse();
+    deal_with_increment(&mut cards, 25);
+    cards.rotate_left(5744);
+    deal_with_increment(&mut cards, 69);
+    cards.reverse();
+    cards.rotate_left(6645);
+    deal_with_increment(&mut cards, 49);
+    cards.rotate_right(9379);
+    deal_with_increment(&mut cards, 2);
+    cards.rotate_left(2768);
+    deal_with_increment(&mut cards, 21);
+    cards.rotate_left(6900);
+    deal_with_increment(&mut cards, 67);
+    cards.rotate_right(4226);
+    deal_with_increment(&mut cards, 12);
+    cards.rotate_left(2541);
+    deal_with_increment(&mut cards, 70);
+    cards.rotate_right(9160);
+    deal_with_increment(&mut cards, 19);
+    cards.reverse();
+    cards.rotate_right(7165);
+    deal_with_increment(&mut cards, 74);
+    cards.reverse();
+    deal_with_increment(&mut cards, 65);
+    cards.rotate_left(298);
+    deal_with_increment(&mut cards, 24);
+    cards.reverse();
+    deal_with_increment(&mut cards, 29);
+    cards.rotate_left(7412);
+    deal_with_increment(&mut cards, 30);
+    cards.rotate_right(3224);
+    cards.reverse();
+    cards.rotate_right(7213);
+    deal_with_increment(&mut cards, 45);
+    cards.rotate_left(8295);
+
+    println!("Part 1: {}", cards.iter().position(|c| *c == 2019).unwrap());
+}
+
+fn deal_with_increment(cards: &mut Vec<u16>, n: usize) {
+    let cards_copy = cards.clone();
+    let mut pos = 0;
+
+    for card in cards_copy {
+        cards[pos] = card;
+        pos = (pos + n) % cards.len();
+    }
+}
