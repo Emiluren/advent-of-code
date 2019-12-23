@@ -1,7 +1,4 @@
-use std::collections::{HashMap, HashSet};
-use std::thread;
-use std::sync::mpsc::{channel, Sender, Receiver};
-use std::sync::{Arc, Mutex};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 fn main() {
     let original_input = vec![
@@ -11,38 +8,26 @@ fn main() {
     let input_map: HashMap<_, _> = original_input.iter().enumerate()
         .map(|(i, v)| (i as i64, *v)).collect();
 
-    let mut senders = Vec::new();
-    let mut receivers = Vec::new();
-    let mut idle_signals = Vec::new();
+    let mut programs = Vec::new();
+    // input: VecDeque<(i64, i64)>,
+    // output: VecDeque<(usize, i64, i64)>,
+    let mut inputs = Vec::new();
 
     for i in 0..50 {
-        let (router_sender, computer_receiver) = channel();
-        let (computer_sender, router_receiver) = channel();
+        let prog = ProgramState::new(&input_map);
+        let mut input = VecDeque::new();
 
-        router_sender.send(i).unwrap();
+        input.push_back(i);
 
-        let idle_signal = Arc::new(Mutex::new(false));
-
-        let input_map = input_map.clone();
-        let is = idle_signal.clone();
-        thread::spawn(move|| {
-            run_program(&input_map, computer_receiver, computer_sender, is);
-        });
-
-        senders.push(router_sender);
-        receivers.push(router_receiver);
-        idle_signals.push(idle_signal);
+        programs.push(prog);
+        inputs.push(input);
     }
 
     let mut nat_pack = None;
     let mut received_nat_values = HashSet::new();
     loop {
-        for receiver in &receivers {
-            if let Ok(address) = receiver.try_recv() {
-                let address = address as usize;
-                let x = receiver.recv().unwrap();
-                let y = receiver.recv().unwrap();
-
+        for i in 0..50 {
+            if let Some((address, x, y)) = programs[i].run_program_instruction(&mut inputs[i]) {
                 if address == 255 {
                     if nat_pack == None {
                         println!("Part 1: {}", y);
@@ -53,26 +38,26 @@ fn main() {
 
                     if received_nat_values.contains(&y) {
                         // 15360 too high
+                        // 15336 too high
                         println!("Part 2: {}", y);
                         return;
                     }
                     received_nat_values.insert(y);
                 } else {
-                    let mut signal = idle_signals[address].lock().unwrap();
-                    *signal = false;
-                    senders[address].send(x).unwrap();
-                    senders[address].send(y).unwrap();
+                    inputs[address].push_back(x);
+                    inputs[address].push_back(y);
                 }
             }
+        }
 
-            let locked_signals: Vec<_> = idle_signals.iter().map(|s| s.lock().unwrap()).collect();
-            if locked_signals.iter().all(|s| *s) {
-                if let Some((x, y)) = nat_pack {
-                    senders[0].send(x).unwrap();
-                    senders[0].send(y).unwrap();
-                    let mut signal = idle_signals[0].lock().unwrap();
-                    *signal = false;
-                }
+        let all_idle = programs.iter().all(|p| p.idle);
+        let all_queues_empty = inputs.iter().all(|i| i.len() == 0);
+
+        if all_idle && all_queues_empty {
+            if let Some((x, y)) = nat_pack {
+                inputs[0].push_back(x);
+                inputs[0].push_back(y);
+                programs[0].idle = false;
             }
         }
     }
@@ -86,50 +71,71 @@ fn print_memory(memory: &HashMap<i64, i64>) {
     println!();
 }
 
-fn run_program(
-    initial_memory: &HashMap<i64, i64>,
-    input: Receiver<i64>,
-    output: Sender<i64>,
-    idle_signal: Arc<Mutex<bool>>,
-) {
-    let mut memory = initial_memory.clone();
-    let mut relative_base = 0;
-    let mut i = 0;
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum OutputState { None, Address(usize), X(usize, i64) }
 
-    macro_rules! get_data {
-        ($mode:expr, $parameter:expr) => {
-            match $mode {
-                0 => memory.get(&$parameter).cloned().unwrap_or(0),
-                1 => $parameter,
-                2 => memory.get(&(relative_base + $parameter)).cloned().unwrap_or(0),
-                _ => panic!("Invalid addressing mode {}", $mode)
+struct ProgramState {
+    memory: HashMap<i64, i64>,
+    relative_base: i64,
+    i: i64,
+    idle: bool,
+    output_state: OutputState,
+}
+
+// #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+// enum ProgramAction { None, Idle, Output }
+
+impl ProgramState {
+    fn new(
+        initial_memory: &HashMap<i64, i64>,
+    ) -> Self {
+        ProgramState {
+            memory: initial_memory.clone(),
+            relative_base: 0,
+            i: 0,
+            idle: false,
+            output_state: OutputState::None,
+        }
+    }
+
+    fn run_program_instruction(&mut self, input: &mut VecDeque<i64>) -> Option<(usize, i64, i64)> {
+        macro_rules! get_data {
+            ($mode:expr, $parameter:expr) => {
+                match $mode {
+                    0 => self.memory.get(&$parameter).cloned().unwrap_or(0),
+                    1 => $parameter,
+                    2 => self.memory.get(&(self.relative_base + $parameter)).cloned().unwrap_or(0),
+                    _ => panic!("Invalid addressing mode {}", $mode)
+                }
             }
         }
-    }
 
-    macro_rules! set_data {
-        ($mode:expr, $parameter:expr, $value:expr) => {
-            match $mode {
-                0 => memory.insert($parameter, $value),
-                1 => panic!("Cannot set in immediate mode"),
-                2 => memory.insert(relative_base + $parameter, $value),
-                _ => panic!("Invalid addressing mode {}", $mode)
-            };
+        macro_rules! set_data {
+            ($mode:expr, $parameter:expr, $value:expr) => {
+                match $mode {
+                    0 => self.memory.insert($parameter, $value),
+                    1 => panic!("Cannot set in immediate mode"),
+                    2 => self.memory.insert(self.relative_base + $parameter, $value),
+                    _ => panic!("Invalid addressing mode {}", $mode)
+                };
+            }
         }
-    }
 
-    loop {
-        let op = memory[&i] % 100;
-        let mode1 = (memory[&i] / 100) % 10;
-        let mode2 = (memory[&i] / 1000) % 10;
-        let mode3 = memory[&i] / 10_000;
+        // let mut action = ProgramAction::None;
+        let mut output = None;
+
+        let mut i = self.i;
+        let op = self.memory[&i] % 100;
+        let mode1 = (self.memory[&i] / 100) % 10;
+        let mode2 = (self.memory[&i] / 1000) % 10;
+        let mode3 = self.memory[&i] / 10_000;
 
         let get2 = || {
-            (memory[&(i+1)], memory[&(i+2)])
+            (self.memory[&(i+1)], self.memory[&(i+2)])
         };
 
         let get3 = || {
-            (memory[&(i+1)], memory[&(i+2)], memory[&(i+3)])
+            (self.memory[&(i+1)], self.memory[&(i+2)], self.memory[&(i+3)])
         };
 
         match op {
@@ -146,21 +152,31 @@ fn run_program(
                 i += 4;
             }
             3 => {
-                let pos = memory[&(i+1)];
-                let mut signal = idle_signal.lock().unwrap();
-                if let Ok(val) = input.try_recv() {
+                let pos = self.memory[&(i+1)];
+                if let Some(val) = input.pop_front() {
                     set_data!(mode1, pos, val);
-                    *signal = false;
+                    self.idle = false;
                 } else {
                     set_data!(mode1, pos, -1);
-                    *signal = true;
+                    self.idle = true;
                 }
                 i += 2;
             }
             4 => {
-                let mut signal = idle_signal.lock().unwrap();
-                *signal = false;
-                output.send(get_data!(mode1, memory[&(i+1)])).unwrap();
+                let val = get_data!(mode1, self.memory[&(i+1)]);
+                self.idle = false;
+                match self.output_state {
+                    OutputState::None => {
+                        self.output_state = OutputState::Address(val as usize);
+                    }
+                    OutputState::Address(addr) => {
+                        self.output_state = OutputState::X(addr, val);
+                    }
+                    OutputState::X(addr, x) => {
+                        self.output_state = OutputState::None;
+                        output = Some((addr, x, val));
+                    }
+                }
                 i += 2;
             }
             5 => {
@@ -200,15 +216,17 @@ fn run_program(
                 i += 4;
             }
             9 => {
-                relative_base += get_data!(mode1, memory[&(i+1)]);
+                self.relative_base += get_data!(mode1, self.memory[&(i+1)]);
                 i += 2;
             }
             99 => {
-                break;
             }
             _ => {
                 panic!("Unknown op code {}", op);
             }
         }
+
+        self.i = i;
+        return output;
     }
 }
