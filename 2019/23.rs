@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::thread;
 use std::sync::mpsc::{channel, Sender, Receiver};
+use std::sync::{Arc, Mutex};
 
 fn main() {
     let original_input = vec![
@@ -12,6 +13,7 @@ fn main() {
 
     let mut senders = Vec::new();
     let mut receivers = Vec::new();
+    let mut idle_signals = Vec::new();
 
     for i in 0..50 {
         let (router_sender, computer_receiver) = channel();
@@ -19,15 +21,21 @@ fn main() {
 
         router_sender.send(i).unwrap();
 
+        let idle_signal = Arc::new(Mutex::new(false));
+
         let input_map = input_map.clone();
+        let is = idle_signal.clone();
         thread::spawn(move|| {
-            run_program(&input_map, computer_receiver, computer_sender);
+            run_program(&input_map, computer_receiver, computer_sender, is);
         });
 
         senders.push(router_sender);
         receivers.push(router_receiver);
+        idle_signals.push(idle_signal);
     }
 
+    let mut nat_pack = None;
+    let mut received_nat_values = HashSet::new();
     loop {
         for receiver in &receivers {
             if let Ok(address) = receiver.try_recv() {
@@ -36,10 +44,34 @@ fn main() {
                 let y = receiver.recv().unwrap();
 
                 if address == 255 {
-                    println!("Part 1: {}", y);
+                    if nat_pack == None {
+                        println!("Part 1: {}", y);
+                    } else {
+                        println!("Nat received {}", y);
+                    }
+                    nat_pack = Some((x, y));
+
+                    if received_nat_values.contains(&y) {
+                        // 15360 too high
+                        println!("Part 2: {}", y);
+                        return;
+                    }
+                    received_nat_values.insert(y);
                 } else {
+                    let mut signal = idle_signals[address].lock().unwrap();
+                    *signal = false;
                     senders[address].send(x).unwrap();
                     senders[address].send(y).unwrap();
+                }
+            }
+
+            let locked_signals: Vec<_> = idle_signals.iter().map(|s| s.lock().unwrap()).collect();
+            if locked_signals.iter().all(|s| *s) {
+                if let Some((x, y)) = nat_pack {
+                    senders[0].send(x).unwrap();
+                    senders[0].send(y).unwrap();
+                    let mut signal = idle_signals[0].lock().unwrap();
+                    *signal = false;
                 }
             }
         }
@@ -54,7 +86,12 @@ fn print_memory(memory: &HashMap<i64, i64>) {
     println!();
 }
 
-fn run_program(initial_memory: &HashMap<i64, i64>, input: Receiver<i64>, output: Sender<i64>) {
+fn run_program(
+    initial_memory: &HashMap<i64, i64>,
+    input: Receiver<i64>,
+    output: Sender<i64>,
+    idle_signal: Arc<Mutex<bool>>,
+) {
     let mut memory = initial_memory.clone();
     let mut relative_base = 0;
     let mut i = 0;
@@ -110,14 +147,19 @@ fn run_program(initial_memory: &HashMap<i64, i64>, input: Receiver<i64>, output:
             }
             3 => {
                 let pos = memory[&(i+1)];
+                let mut signal = idle_signal.lock().unwrap();
                 if let Ok(val) = input.try_recv() {
                     set_data!(mode1, pos, val);
+                    *signal = false;
                 } else {
                     set_data!(mode1, pos, -1);
+                    *signal = true;
                 }
                 i += 2;
             }
             4 => {
+                let mut signal = idle_signal.lock().unwrap();
+                *signal = false;
                 output.send(get_data!(mode1, memory[&(i+1)])).unwrap();
                 i += 2;
             }
