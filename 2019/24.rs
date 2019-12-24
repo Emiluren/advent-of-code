@@ -9,26 +9,6 @@ fn main() {
 ##.##
 ..#.#";
 
-    let test_input = ".....
-.....
-.....
-#....
-.#...";
-
-    println!("testdiv {}", calc_biodiversity(&str_to_state(test_input)));
-
-    let test_input = "....#
-#..#.
-#..##
-..#..
-#....";
-
-    let mut test_state = str_to_state(test_input);
-    for i in 0..5 {
-        print_state(&test_state);
-        test_state = tick(&test_state.clone());
-    }
-
     fn str_to_state(s: &str) -> State {
         s.split('\n').map(
             |s| s.chars().collect()
@@ -41,11 +21,10 @@ fn main() {
     old_states.insert(state.clone());
 
     loop {
-        state = tick(&state);
+        state = tick1(&state);
         if old_states.contains(&state) {
             println!("first layout twice:");
             print_state(&state);
-            // 1083102 too low
             println!("Part 1: {}", calc_biodiversity(&state));
             break;
         }
@@ -78,7 +57,7 @@ fn calc_biodiversity(state: &State) -> usize {
     tot
 }
 
-fn tick(state: &State) -> State {
+fn tick1(state: &State) -> State {
     let height = state.len();
     let width = state[0].len();
 
