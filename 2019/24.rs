@@ -17,6 +17,18 @@ fn main() {
 
     println!("testdiv {}", calc_biodiversity(&str_to_state(test_input)));
 
+    let test_input = "....#
+#..#.
+#..##
+..#..
+#....";
+
+    let mut test_state = str_to_state(test_input);
+    for i in 0..5 {
+        print_state(&test_state);
+        test_state = tick(&test_state.clone());
+    }
+
     fn str_to_state(s: &str) -> State {
         s.split('\n').map(
             |s| s.chars().collect()
@@ -74,21 +86,18 @@ fn tick(state: &State) -> State {
     for r in 0..height {
         for c in 0..width {
             let mut neighbours = 0;
-            for rr in -1..=1 {
-                for cc in -1..=1 {
-                    if rr == 0 && c == 0 {
-                        continue;
-                    }
 
-                    let (r, c) = (r as i8 + rr, c as i8 + cc);
-                    if r < 0 || c < 0 || r as usize >= height || c as usize >= width {
-                        continue;
-                    }
-
-                    if state[r as usize][c as usize] == '#' {
-                        neighbours += 1;
-                    }
-                }
+            if r > 0 && state[r-1][c] == '#' {
+                neighbours += 1;
+            }
+            if r < height - 1 && state[r+1][c] == '#' {
+                neighbours += 1;
+            }
+            if c > 0 && state[r][c-1] == '#' {
+                neighbours += 1;
+            }
+            if c < width - 1 && state[r][c+1] == '#' {
+                neighbours += 1;
             }
 
             if state[r][c] == '#' {
