@@ -1,108 +1,130 @@
-use std::collections::HashSet;
+#[derive(Clone, Copy)]
+enum ShuffleInstruction { NewStack, Cut(i64), DealIncrement(i64) }
+use ShuffleInstruction::*;
 
 fn main() {
+    let input = [
+        NewStack,
+        DealIncrement(57),
+        Cut(-4643),
+        DealIncrement(59),
+        Cut(5189),
+        NewStack,
+        DealIncrement(24),
+        Cut(3207),
+        DealIncrement(63),
+        Cut(3839),
+        DealIncrement(53),
+        Cut(-1014),
+        DealIncrement(21),
+        Cut(-3150),
+        NewStack,
+        DealIncrement(39),
+        Cut(900),
+        DealIncrement(6),
+        NewStack,
+        DealIncrement(65),
+        Cut(6108),
+        DealIncrement(54),
+        Cut(6343),
+        DealIncrement(26),
+        NewStack,
+        Cut(8625),
+        DealIncrement(8),
+        Cut(-1956),
+        NewStack,
+        Cut(8750),
+        DealIncrement(43),
+        Cut(-2930),
+        DealIncrement(10),
+        Cut(-2359),
+        DealIncrement(34),
+        Cut(390),
+        DealIncrement(46),
+        Cut(5467),
+        NewStack,
+        Cut(61),
+        DealIncrement(4),
+        Cut(-332),
+        NewStack,
+        DealIncrement(74),
+        Cut(-2568),
+        DealIncrement(54),
+        NewStack,
+        DealIncrement(47),
+        Cut(-9034),
+        DealIncrement(74),
+        Cut(2174),
+        NewStack,
+        DealIncrement(63),
+        Cut(-3966),
+        DealIncrement(16),
+        Cut(1619),
+        DealIncrement(43),
+        NewStack,
+        Cut(2779),
+        NewStack,
+        Cut(-1441),
+        DealIncrement(52),
+        Cut(362),
+        DealIncrement(25),
+        Cut(-5105),
+        NewStack,
+        DealIncrement(25),
+        Cut(5744),
+        DealIncrement(69),
+        NewStack,
+        Cut(6645),
+        DealIncrement(49),
+        Cut(-9379),
+        DealIncrement(2),
+        Cut(2768),
+        DealIncrement(21),
+        Cut(6900),
+        DealIncrement(67),
+        Cut(-4226),
+        DealIncrement(12),
+        Cut(2541),
+        DealIncrement(70),
+        Cut(-9160),
+        DealIncrement(19),
+        NewStack,
+        Cut(-7165),
+        DealIncrement(74),
+        NewStack,
+        DealIncrement(65),
+        Cut(298),
+        DealIncrement(24),
+        NewStack,
+        DealIncrement(29),
+        Cut(7412),
+        DealIncrement(30),
+        Cut(-3224),
+        NewStack,
+        Cut(-7213),
+        DealIncrement(45),
+        Cut(8295),
+    ];
+
     let mut cards: Vec<_> = (0..=10_006).collect();
 
-    cards.reverse();
-    deal_with_increment(&mut cards, 57);
-    cards.rotate_right(4643);
-    deal_with_increment(&mut cards, 59);
-    cards.rotate_left(5189);
-    cards.reverse();
-    deal_with_increment(&mut cards, 24);
-    cards.rotate_left(3207);
-    deal_with_increment(&mut cards, 63);
-    cards.rotate_left(3839);
-    deal_with_increment(&mut cards, 53);
-    cards.rotate_right(1014);
-    deal_with_increment(&mut cards, 21);
-    cards.rotate_right(3150);
-    cards.reverse();
-    deal_with_increment(&mut cards, 39);
-    cards.rotate_left(900);
-    deal_with_increment(&mut cards, 6);
-    cards.reverse();
-    deal_with_increment(&mut cards, 65);
-    cards.rotate_left(6108);
-    deal_with_increment(&mut cards, 54);
-    cards.rotate_left(6343);
-    deal_with_increment(&mut cards, 26);
-    cards.reverse();
-    cards.rotate_left(8625);
-    deal_with_increment(&mut cards, 8);
-    cards.rotate_right(1956);
-    cards.reverse();
-    cards.rotate_left(8750);
-    deal_with_increment(&mut cards, 43);
-    cards.rotate_right(2930);
-    deal_with_increment(&mut cards, 10);
-    cards.rotate_right(2359);
-    deal_with_increment(&mut cards, 34);
-    cards.rotate_left(390);
-    deal_with_increment(&mut cards, 46);
-    cards.rotate_left(5467);
-    cards.reverse();
-    cards.rotate_left(61);
-    deal_with_increment(&mut cards, 4);
-    cards.rotate_right(332);
-    cards.reverse();
-    deal_with_increment(&mut cards, 74);
-    cards.rotate_right(2568);
-    deal_with_increment(&mut cards, 54);
-    cards.reverse();
-    deal_with_increment(&mut cards, 47);
-    cards.rotate_right(9034);
-    deal_with_increment(&mut cards, 74);
-    cards.rotate_left(2174);
-    cards.reverse();
-    deal_with_increment(&mut cards, 63);
-    cards.rotate_right(3966);
-    deal_with_increment(&mut cards, 16);
-    cards.rotate_left(1619);
-    deal_with_increment(&mut cards, 43);
-    cards.reverse();
-    cards.rotate_left(2779);
-    cards.reverse();
-    cards.rotate_right(1441);
-    deal_with_increment(&mut cards, 52);
-    cards.rotate_left(362);
-    deal_with_increment(&mut cards, 25);
-    cards.rotate_right(5105);
-    cards.reverse();
-    deal_with_increment(&mut cards, 25);
-    cards.rotate_left(5744);
-    deal_with_increment(&mut cards, 69);
-    cards.reverse();
-    cards.rotate_left(6645);
-    deal_with_increment(&mut cards, 49);
-    cards.rotate_right(9379);
-    deal_with_increment(&mut cards, 2);
-    cards.rotate_left(2768);
-    deal_with_increment(&mut cards, 21);
-    cards.rotate_left(6900);
-    deal_with_increment(&mut cards, 67);
-    cards.rotate_right(4226);
-    deal_with_increment(&mut cards, 12);
-    cards.rotate_left(2541);
-    deal_with_increment(&mut cards, 70);
-    cards.rotate_right(9160);
-    deal_with_increment(&mut cards, 19);
-    cards.reverse();
-    cards.rotate_right(7165);
-    deal_with_increment(&mut cards, 74);
-    cards.reverse();
-    deal_with_increment(&mut cards, 65);
-    cards.rotate_left(298);
-    deal_with_increment(&mut cards, 24);
-    cards.reverse();
-    deal_with_increment(&mut cards, 29);
-    cards.rotate_left(7412);
-    deal_with_increment(&mut cards, 30);
-    cards.rotate_right(3224);
-    cards.reverse();
-    cards.rotate_right(7213);
-    deal_with_increment(&mut cards, 45);
-    cards.rotate_left(8295);
+    for instuction in input.iter().cloned() {
+        match instuction {
+            NewStack => {
+                cards.reverse();
+            }
+            DealIncrement(inc) => {
+                deal_with_increment(&mut cards, inc as usize)
+            }
+            Cut(i) => {
+                if i < 0 {
+                    cards.rotate_right(i.abs() as usize);
+                } else {
+                    cards.rotate_left(i as usize);
+                }
+            }
+        }
+    }
 
     println!("Part 1: {}", cards.iter().position(|c| *c == 2019).unwrap());
 
@@ -111,126 +133,21 @@ fn main() {
     let mut increment = 1;
     let mut offset = 0;
 
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(57, DECK_SIZE);
-    offset += -4643 * increment;
-    increment *= modinv(59, DECK_SIZE);
-    offset += 5189 * increment;
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(24, DECK_SIZE);
-    offset += 3207 * increment;
-    increment *= modinv(63, DECK_SIZE);
-    offset += 3839 * increment;
-    increment *= modinv(53, DECK_SIZE);
-    offset += -1014 * increment;
-    increment *= modinv(21, DECK_SIZE);
-    offset += -3150 * increment;
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(39, DECK_SIZE);
-    offset += 900 * increment;
-    increment *= modinv(6, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(65, DECK_SIZE);
-    offset += 6108 * increment;
-    increment *= modinv(54, DECK_SIZE);
-    offset += 6343 * increment;
-    increment *= modinv(26, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    offset += 8625 * increment;
-    increment *= modinv(8, DECK_SIZE);
-    offset += -1956 * increment;
-    increment *= -1;
-    offset += increment;
-    offset += 8750 * increment;
-    increment *= modinv(43, DECK_SIZE);
-    offset += -2930 * increment;
-    increment *= modinv(10, DECK_SIZE);
-    offset += -2359 * increment;
-    increment *= modinv(34, DECK_SIZE);
-    offset += 390 * increment;
-    increment *= modinv(46, DECK_SIZE);
-    offset += 5467 * increment;
-    increment *= -1;
-    offset += increment;
-    offset += 61 * increment;
-    increment *= modinv(4, DECK_SIZE);
-    offset += -332 * increment;
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(74, DECK_SIZE);
-    offset += -2568 * increment;
-    increment *= modinv(54, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(47, DECK_SIZE);
-    offset += -9034 * increment;
-    increment *= modinv(74, DECK_SIZE);
-    offset += 2174 * increment;
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(63, DECK_SIZE);
-    offset += -3966 * increment;
-    increment *= modinv(16, DECK_SIZE);
-    offset += 1619 * increment;
-    increment *= modinv(43, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    offset += 2779 * increment;
-    increment *= -1;
-    offset += increment;
-    offset += -1441 * increment;
-    increment *= modinv(52, DECK_SIZE);
-    offset += 362 * increment;
-    increment *= modinv(25, DECK_SIZE);
-    offset += -5105 * increment;
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(25, DECK_SIZE);
-    offset += 5744 * increment;
-    increment *= modinv(69, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    offset += 6645 * increment;
-    increment *= modinv(49, DECK_SIZE);
-    offset += -9379 * increment;
-    increment *= modinv(2, DECK_SIZE);
-    offset += 2768 * increment;
-    increment *= modinv(21, DECK_SIZE);
-    offset += 6900 * increment;
-    increment *= modinv(67, DECK_SIZE);
-    offset += -4226 * increment;
-    increment *= modinv(12, DECK_SIZE);
-    offset += 2541 * increment;
-    increment *= modinv(70, DECK_SIZE);
-    offset += -9160 * increment;
-    increment *= modinv(19, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    offset += -7165 * increment;
-    increment *= modinv(74, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(65, DECK_SIZE);
-    offset += 298 * increment;
-    increment *= modinv(24, DECK_SIZE);
-    increment *= -1;
-    offset += increment;
-    increment *= modinv(29, DECK_SIZE);
-    offset += 7412 * increment;
-    increment *= modinv(30, DECK_SIZE);
-    offset += -3224 * increment;
-    increment *= -1;
-    offset += increment;
-    offset += -7213 * increment;
-    increment *= modinv(45, DECK_SIZE);
-    offset += 8295 * increment;
-
-    println!("increment = {}, offset = {}", increment, offset);
+    for instuction in input.iter().cloned() {
+        match instuction {
+            NewStack => {
+                increment *= -1;
+                offset += increment;
+            }
+            DealIncrement(inc) => {
+                increment *= modinv(inc, DECK_SIZE);
+            }
+            Cut(i) => {
+                offset += i * increment;
+            }
+        }
+        println!("increment = {}, offset = {}", increment, offset);
+    }
 
     let i = mod_pow(increment, shuffle_times, DECK_SIZE);
     println!("i {}", i);
