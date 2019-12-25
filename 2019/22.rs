@@ -1,270 +1,167 @@
-use std::collections::HashSet;
+#[derive(Clone, Copy)]
+enum ShuffleInstruction { NewStack, Cut(i64), DealIncrement(i64) }
+use ShuffleInstruction::*;
 
 fn main() {
+    let input = [
+        NewStack,
+        DealIncrement(57),
+        Cut(-4643),
+        DealIncrement(59),
+        Cut(5189),
+        NewStack,
+        DealIncrement(24),
+        Cut(3207),
+        DealIncrement(63),
+        Cut(3839),
+        DealIncrement(53),
+        Cut(-1014),
+        DealIncrement(21),
+        Cut(-3150),
+        NewStack,
+        DealIncrement(39),
+        Cut(900),
+        DealIncrement(6),
+        NewStack,
+        DealIncrement(65),
+        Cut(6108),
+        DealIncrement(54),
+        Cut(6343),
+        DealIncrement(26),
+        NewStack,
+        Cut(8625),
+        DealIncrement(8),
+        Cut(-1956),
+        NewStack,
+        Cut(8750),
+        DealIncrement(43),
+        Cut(-2930),
+        DealIncrement(10),
+        Cut(-2359),
+        DealIncrement(34),
+        Cut(390),
+        DealIncrement(46),
+        Cut(5467),
+        NewStack,
+        Cut(61),
+        DealIncrement(4),
+        Cut(-332),
+        NewStack,
+        DealIncrement(74),
+        Cut(-2568),
+        DealIncrement(54),
+        NewStack,
+        DealIncrement(47),
+        Cut(-9034),
+        DealIncrement(74),
+        Cut(2174),
+        NewStack,
+        DealIncrement(63),
+        Cut(-3966),
+        DealIncrement(16),
+        Cut(1619),
+        DealIncrement(43),
+        NewStack,
+        Cut(2779),
+        NewStack,
+        Cut(-1441),
+        DealIncrement(52),
+        Cut(362),
+        DealIncrement(25),
+        Cut(-5105),
+        NewStack,
+        DealIncrement(25),
+        Cut(5744),
+        DealIncrement(69),
+        NewStack,
+        Cut(6645),
+        DealIncrement(49),
+        Cut(-9379),
+        DealIncrement(2),
+        Cut(2768),
+        DealIncrement(21),
+        Cut(6900),
+        DealIncrement(67),
+        Cut(-4226),
+        DealIncrement(12),
+        Cut(2541),
+        DealIncrement(70),
+        Cut(-9160),
+        DealIncrement(19),
+        NewStack,
+        Cut(-7165),
+        DealIncrement(74),
+        NewStack,
+        DealIncrement(65),
+        Cut(298),
+        DealIncrement(24),
+        NewStack,
+        DealIncrement(29),
+        Cut(7412),
+        DealIncrement(30),
+        Cut(-3224),
+        NewStack,
+        Cut(-7213),
+        DealIncrement(45),
+        Cut(8295),
+    ];
+
     let mut cards: Vec<_> = (0..=10_006).collect();
 
-    cards.reverse();
-    deal_with_increment(&mut cards, 57);
-    cards.rotate_right(4643);
-    deal_with_increment(&mut cards, 59);
-    cards.rotate_left(5189);
-    cards.reverse();
-    deal_with_increment(&mut cards, 24);
-    cards.rotate_left(3207);
-    deal_with_increment(&mut cards, 63);
-    cards.rotate_left(3839);
-    deal_with_increment(&mut cards, 53);
-    cards.rotate_right(1014);
-    deal_with_increment(&mut cards, 21);
-    cards.rotate_right(3150);
-    cards.reverse();
-    deal_with_increment(&mut cards, 39);
-    cards.rotate_left(900);
-    deal_with_increment(&mut cards, 6);
-    cards.reverse();
-    deal_with_increment(&mut cards, 65);
-    cards.rotate_left(6108);
-    deal_with_increment(&mut cards, 54);
-    cards.rotate_left(6343);
-    deal_with_increment(&mut cards, 26);
-    cards.reverse();
-    cards.rotate_left(8625);
-    deal_with_increment(&mut cards, 8);
-    cards.rotate_right(1956);
-    cards.reverse();
-    cards.rotate_left(8750);
-    deal_with_increment(&mut cards, 43);
-    cards.rotate_right(2930);
-    deal_with_increment(&mut cards, 10);
-    cards.rotate_right(2359);
-    deal_with_increment(&mut cards, 34);
-    cards.rotate_left(390);
-    deal_with_increment(&mut cards, 46);
-    cards.rotate_left(5467);
-    cards.reverse();
-    cards.rotate_left(61);
-    deal_with_increment(&mut cards, 4);
-    cards.rotate_right(332);
-    cards.reverse();
-    deal_with_increment(&mut cards, 74);
-    cards.rotate_right(2568);
-    deal_with_increment(&mut cards, 54);
-    cards.reverse();
-    deal_with_increment(&mut cards, 47);
-    cards.rotate_right(9034);
-    deal_with_increment(&mut cards, 74);
-    cards.rotate_left(2174);
-    cards.reverse();
-    deal_with_increment(&mut cards, 63);
-    cards.rotate_right(3966);
-    deal_with_increment(&mut cards, 16);
-    cards.rotate_left(1619);
-    deal_with_increment(&mut cards, 43);
-    cards.reverse();
-    cards.rotate_left(2779);
-    cards.reverse();
-    cards.rotate_right(1441);
-    deal_with_increment(&mut cards, 52);
-    cards.rotate_left(362);
-    deal_with_increment(&mut cards, 25);
-    cards.rotate_right(5105);
-    cards.reverse();
-    deal_with_increment(&mut cards, 25);
-    cards.rotate_left(5744);
-    deal_with_increment(&mut cards, 69);
-    cards.reverse();
-    cards.rotate_left(6645);
-    deal_with_increment(&mut cards, 49);
-    cards.rotate_right(9379);
-    deal_with_increment(&mut cards, 2);
-    cards.rotate_left(2768);
-    deal_with_increment(&mut cards, 21);
-    cards.rotate_left(6900);
-    deal_with_increment(&mut cards, 67);
-    cards.rotate_right(4226);
-    deal_with_increment(&mut cards, 12);
-    cards.rotate_left(2541);
-    deal_with_increment(&mut cards, 70);
-    cards.rotate_right(9160);
-    deal_with_increment(&mut cards, 19);
-    cards.reverse();
-    cards.rotate_right(7165);
-    deal_with_increment(&mut cards, 74);
-    cards.reverse();
-    deal_with_increment(&mut cards, 65);
-    cards.rotate_left(298);
-    deal_with_increment(&mut cards, 24);
-    cards.reverse();
-    deal_with_increment(&mut cards, 29);
-    cards.rotate_left(7412);
-    deal_with_increment(&mut cards, 30);
-    cards.rotate_right(3224);
-    cards.reverse();
-    cards.rotate_right(7213);
-    deal_with_increment(&mut cards, 45);
-    cards.rotate_left(8295);
-
-    println!("Part 1: {}", cards.iter().position(|c| *c == 2019).unwrap());
-
-    let mut card_to_find = 2020;
-    let shuffle_times: usize = 101_741_582_076_661;
-    let mut iteration = 0;
-
-    let mut found_set = HashSet::new();
-    found_set.insert(2020);
-    let mut found_vec = vec![2020];
-
-    let mut found_cycle = false;
-
-    while iteration < shuffle_times {
-        if iteration % 1_000_000 == 0 {
-            //println!("On iteration {}", iteration);
-        }
-
-        card_to_find = cut(8295, card_to_find);
-        card_to_find = deal_big(card_to_find, 45);
-        card_to_find = cut(-7213, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(-3224, card_to_find);
-        card_to_find = deal_big(card_to_find, 30);
-        card_to_find = cut(7412, card_to_find);
-        card_to_find = deal_big(card_to_find, 29);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 24);
-        card_to_find = cut(298, card_to_find);
-        card_to_find = deal_big(card_to_find, 65);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 74);
-        card_to_find = cut(-7165, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 19);
-        card_to_find = cut(-9160, card_to_find);
-        card_to_find = deal_big(card_to_find, 70);
-        card_to_find = cut(2541, card_to_find);
-        card_to_find = deal_big(card_to_find, 12);
-        card_to_find = cut(-4226, card_to_find);
-        card_to_find = deal_big(card_to_find, 67);
-        card_to_find = cut(6900, card_to_find);
-        card_to_find = deal_big(card_to_find, 21);
-        card_to_find = cut(2768, card_to_find);
-        card_to_find = deal_big(card_to_find, 2);
-        card_to_find = cut(-9379, card_to_find);
-        card_to_find = deal_big(card_to_find, 49);
-        card_to_find = cut(6645, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 69);
-        card_to_find = cut(5744, card_to_find);
-        card_to_find = deal_big(card_to_find, 25);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(-5105, card_to_find);
-        card_to_find = deal_big(card_to_find, 25);
-        card_to_find = cut(362, card_to_find);
-        card_to_find = deal_big(card_to_find, 52);
-        card_to_find = cut(-1441, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(2779, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 43);
-        card_to_find = cut(1619, card_to_find);
-        card_to_find = deal_big(card_to_find, 16);
-        card_to_find = cut(-3966, card_to_find);
-        card_to_find = deal_big(card_to_find, 63);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(2174, card_to_find);
-        card_to_find = deal_big(card_to_find, 74);
-        card_to_find = cut(-9034, card_to_find);
-        card_to_find = deal_big(card_to_find, 47);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 54);
-        card_to_find = cut(-2568, card_to_find);
-        card_to_find = deal_big(card_to_find, 74);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(-332, card_to_find);
-        card_to_find = deal_big(card_to_find, 4);
-        card_to_find = cut(61, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(5467, card_to_find);
-        card_to_find = deal_big(card_to_find, 46);
-        card_to_find = cut(390, card_to_find);
-        card_to_find = deal_big(card_to_find, 34);
-        card_to_find = cut(-2359, card_to_find);
-        card_to_find = deal_big(card_to_find, 10);
-        card_to_find = cut(-2930, card_to_find);
-        card_to_find = deal_big(card_to_find, 43);
-        card_to_find = cut(8750, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(-1956, card_to_find);
-        card_to_find = deal_big(card_to_find, 8);
-        card_to_find = cut(8625, card_to_find);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 26);
-        card_to_find = cut(6343, card_to_find);
-        card_to_find = deal_big(card_to_find, 54);
-        card_to_find = cut(6108, card_to_find);
-        card_to_find = deal_big(card_to_find, 65);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = deal_big(card_to_find, 6);
-        card_to_find = cut(900, card_to_find);
-        card_to_find = deal_big(card_to_find, 39);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(-3150, card_to_find);
-        card_to_find = deal_big(card_to_find, 21);
-        card_to_find = cut(-1014, card_to_find);
-        card_to_find = deal_big(card_to_find, 53);
-        card_to_find = cut(3839, card_to_find);
-        card_to_find = deal_big(card_to_find, 63);
-        card_to_find = cut(3207, card_to_find);
-        card_to_find = deal_big(card_to_find, 24);
-        card_to_find = new_stack(card_to_find);
-        card_to_find = cut(5189, card_to_find);
-        card_to_find = deal_big(card_to_find, 59);
-        card_to_find = cut(-4643, card_to_find);
-        card_to_find = deal_big(card_to_find, 57);
-        card_to_find = new_stack(card_to_find);
-
-        iteration += 1;
-
-        // println!("{}", card_to_find);
-        // if card_to_find > 100_000_000_000_000 {
-        //     break
-        // }
-
-        // let cycle_start = 140024;
-
-        // if card_to_find == 17630994690691 {
-        //     println!("Found {} at {} ", card_to_find, iteration);
-        // }
-
-        if !found_cycle && found_set.contains(&card_to_find)
-        {
-            let first_found_index = found_vec.iter().position(|c| *c == card_to_find).unwrap();
-            let cycle_length = iteration - first_found_index;
-            let iterations_left = (shuffle_times - first_found_index) % cycle_length;
-            let new_iteration = shuffle_times - iterations_left;
-
-            println!("\nCycle found after {} iterations", iteration);
-            println!("First found {} at {}", card_to_find, first_found_index);
-            println!("cycle length {}", cycle_length);
-            println!("iteration changed to {}\n", new_iteration);
-
-            while iteration + cycle_length < shuffle_times {
-                iteration += cycle_length;
+    for instuction in input.iter().cloned() {
+        match instuction {
+            NewStack => {
+                cards.reverse();
             }
-
-            println!("Iterations = {}", iteration);
-
-            found_cycle = true;
-        }
-
-        if !found_cycle {
-            found_set.insert(card_to_find);
-            found_vec.push(card_to_find);
+            DealIncrement(inc) => {
+                deal_with_increment(&mut cards, inc as usize)
+            }
+            Cut(i) => {
+                if i < 0 {
+                    cards.rotate_right(i.abs() as usize);
+                } else {
+                    cards.rotate_left(i as usize);
+                }
+            }
         }
     }
 
+    println!("Part 1: {}", cards.iter().position(|c| *c == 2019).unwrap());
+
+    let shuffle_times = 101_741_582_076_661;
+
+    let mut increment = 1;
+    let mut offset = 0;
+
+    for instuction in input.iter().cloned() {
+        match instuction {
+            NewStack => {
+                increment *= -1;
+                offset += increment;
+            }
+            DealIncrement(inc) => {
+                increment *= modinv(inc, DECK_SIZE);
+            }
+            Cut(i) => {
+                offset += i * increment;
+            }
+        }
+        println!("increment = {}, offset = {}", increment, offset);
+    }
+
+    let i = mod_pow(increment, shuffle_times, DECK_SIZE);
+    println!("i {}", i);
+    let o = offset * (1 - i) * modinv(1 - increment, DECK_SIZE);
+
+    let res = modulo(o + 2020 * i, DECK_SIZE);
+
     // 17 630 994 690 691 too low
     // 33 955 503 124 298 too low
-    println!("Part 2: {}", card_to_find);
+    // 84 812 307 900 501 too low
+    // 111 253 207 841 782 wrong
+    // 26 473 957 160 995 wrong
+    // 111 102 642 744 155 wrong
+    println!("Part 2: {}", res);
 }
 
 fn deal_with_increment(cards: &mut Vec<u16>, n: usize) {
@@ -277,18 +174,22 @@ fn deal_with_increment(cards: &mut Vec<u16>, n: usize) {
     }
 }
 
-const DECK_SIZE: usize = 119_315_717_514_047;
+fn modulo(n: i64, div: i64) -> i64 {
+    (n % div + div) % div
+}
 
-fn cut(n: i64, card_to_find: usize) -> usize {
+const DECK_SIZE: i64 = 119_315_717_514_047;
+
+fn cut(n: i64, card_to_find: i64) -> i64 {
     if n < 0 {
-        let n = -n as usize;
+        let n = -n as i64;
         if card_to_find >= n {
             card_to_find - n
         } else {
             card_to_find + (DECK_SIZE - n)
         }
     } else {
-        let n = n as usize;
+        let n = n as i64;
         if card_to_find >= DECK_SIZE - n {
             card_to_find - (DECK_SIZE - n)
         } else {
@@ -297,7 +198,23 @@ fn cut(n: i64, card_to_find: usize) -> usize {
     }
 }
 
-fn xgcd(mut a: usize, mut b: usize) -> (usize, usize, usize) {
+fn mod_pow(mut base: i64, mut exp: i64, modulus: i64) -> i64 {
+    if modulus == 1 {
+        return 0
+    }
+    let mut result = 1;
+    base = base % modulus;
+    while exp > 0 {
+        if exp % 2 == 1 {
+            result = result * base % modulus;
+        }
+        exp = exp >> 1;
+        base = base * base % modulus
+    }
+    result
+}
+
+fn xgcd(mut a: i64, mut b: i64) -> (i64, i64, i64) {
     // From https://en.wikibooks.org/wiki/Algorithm_Implementation/Mathematics/Extended_Euclidean_algorithm
     // return (g, x, y) such that a*x + b*y = g = gcd(a, b)
     let mut aa = [1, 0];
@@ -324,7 +241,8 @@ fn xgcd(mut a: usize, mut b: usize) -> (usize, usize, usize) {
     }
 }
 
-fn modinv(a: usize, b: usize) -> usize {
+fn modinv(a: i64, b: i64) -> i64 {
+    return mod_pow(a, b-2, b);
     // return x such that (x * a) % b == 1
     let (g, x, _) = xgcd(a, b);
     if g == 1 {
@@ -334,11 +252,11 @@ fn modinv(a: usize, b: usize) -> usize {
     }
 }
 
-fn deal_big(card_to_find: usize, n: usize) -> usize {
+fn deal_big(card_to_find: i64, n: i64) -> i64 {
     let n_inv = modinv(n, DECK_SIZE);
     (n_inv * card_to_find) % DECK_SIZE
 }
 
-fn new_stack(card_to_find: usize) -> usize {
+fn new_stack(card_to_find: i64) -> i64 {
     DECK_SIZE - card_to_find - 1
 }
