@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 fn main() {
     let original_input = vec![
@@ -24,25 +24,31 @@ fn main() {
     }
 
     let mut nat_pack = None;
-    let mut received_nat_values = HashSet::new();
+    let mut prev_y = None;
+
     loop {
         for i in 0..50 {
-            if let Some((address, x, y)) = programs[i].run_program_instruction(&mut inputs[i]) {
+            programs[i].idle = false;
+
+            let mut input: Vec<_> = inputs[i].drain(..).collect();
+            if input.len() == 0 {
+                input = vec![-1];
+                programs[i].idle = true;
+            }
+            let output = programs[i].run_program(input.into_iter());
+
+            for (address, x, y) in output.into_iter() {
                 if address == 255 {
                     if nat_pack == None {
                         println!("Part 1: {}", y);
-                    } else {
-                        println!("Nat received {}", y);
                     }
-                    nat_pack = Some((x, y));
 
-                    if received_nat_values.contains(&y) {
+                    if let Some((_, prev_y)) = nat_pack {
                         // 15360 too high
                         // 15336 too high
-                        println!("Part 2: {}", y);
-                        return;
+                        // 15373 wrong
                     }
-                    received_nat_values.insert(y);
+                    nat_pack = Some((x, y));
                 } else {
                     inputs[address].push_back(x);
                     inputs[address].push_back(y);
@@ -51,14 +57,17 @@ fn main() {
         }
 
         let all_idle = programs.iter().all(|p| p.idle);
-        let all_queues_empty = inputs.iter().all(|i| i.len() == 0);
 
-        if all_idle && all_queues_empty {
-            if let Some((x, y)) = nat_pack {
-                inputs[0].push_back(x);
-                inputs[0].push_back(y);
-                programs[0].idle = false;
+        if all_idle {
+            let (x, y) = nat_pack.unwrap();
+            inputs[0].push_back(x);
+            inputs[0].push_back(y);
+            if prev_y == Some(y) {
+                println!("Part 2: {}", y);
+                return;
             }
+
+            prev_y = Some(y);
         }
     }
 }
@@ -79,6 +88,7 @@ struct ProgramState {
     relative_base: i64,
     i: i64,
     idle: bool,
+    halted: bool,
     output_state: OutputState,
 }
 
@@ -94,11 +104,16 @@ impl ProgramState {
             relative_base: 0,
             i: 0,
             idle: false,
+            halted: false,
             output_state: OutputState::None,
         }
     }
 
-    fn run_program_instruction(&mut self, input: &mut VecDeque<i64>) -> Option<(usize, i64, i64)> {
+    fn run_program(&mut self, mut input: impl Iterator<Item=i64>) -> Vec<(usize, i64, i64)> {
+        if self.halted {
+            return vec![];
+        }
+
         macro_rules! get_data {
             ($mode:expr, $parameter:expr) => {
                 match $mode {
@@ -122,111 +137,113 @@ impl ProgramState {
         }
 
         // let mut action = ProgramAction::None;
-        let mut output = None;
+        let mut output = Vec::new();
 
         let mut i = self.i;
-        let op = self.memory[&i] % 100;
-        let mode1 = (self.memory[&i] / 100) % 10;
-        let mode2 = (self.memory[&i] / 1000) % 10;
-        let mode3 = self.memory[&i] / 10_000;
 
-        let get2 = || {
-            (self.memory[&(i+1)], self.memory[&(i+2)])
-        };
+        loop {
+            let op = self.memory[&i] % 100;
+            let mode1 = (self.memory[&i] / 100) % 10;
+            let mode2 = (self.memory[&i] / 1000) % 10;
+            let mode3 = self.memory[&i] / 10_000;
 
-        let get3 = || {
-            (self.memory[&(i+1)], self.memory[&(i+2)], self.memory[&(i+3)])
-        };
+            let get2 = || {
+                (self.memory[&(i+1)], self.memory[&(i+2)])
+            };
 
-        match op {
-            1 => {
-                let (in1, in2, out) = get3();
-                let res = get_data!(mode1, in1) + get_data!(mode2, in2);
-                set_data!(mode3, out, res);
-                i += 4;
-            }
-            2 => {
-                let (in1, in2, out) = get3();
-                let res = get_data!(mode1, in1) * get_data!(mode2, in2);
-                set_data!(mode3, out, res);
-                i += 4;
-            }
-            3 => {
-                let pos = self.memory[&(i+1)];
-                if let Some(val) = input.pop_front() {
-                    set_data!(mode1, pos, val);
-                    self.idle = false;
-                } else {
-                    set_data!(mode1, pos, -1);
-                    self.idle = true;
+            let get3 = || {
+                (self.memory[&(i+1)], self.memory[&(i+2)], self.memory[&(i+3)])
+            };
+
+            match op {
+                1 => {
+                    let (in1, in2, out) = get3();
+                    let res = get_data!(mode1, in1) + get_data!(mode2, in2);
+                    set_data!(mode3, out, res);
+                    i += 4;
                 }
-                i += 2;
-            }
-            4 => {
-                let val = get_data!(mode1, self.memory[&(i+1)]);
-                self.idle = false;
-                match self.output_state {
-                    OutputState::None => {
-                        self.output_state = OutputState::Address(val as usize);
+                2 => {
+                    let (in1, in2, out) = get3();
+                    let res = get_data!(mode1, in1) * get_data!(mode2, in2);
+                    set_data!(mode3, out, res);
+                    i += 4;
+                }
+                3 => {
+                    let pos = self.memory[&(i+1)];
+                    if let Some(val) = input.next() {
+                        set_data!(mode1, pos, val);
+                    } else {
+                        break;
                     }
-                    OutputState::Address(addr) => {
-                        self.output_state = OutputState::X(addr, val);
+                    i += 2;
+                }
+                4 => {
+                    let val = get_data!(mode1, self.memory[&(i+1)]);
+                    match self.output_state {
+                        OutputState::None => {
+                            self.output_state = OutputState::Address(val as usize);
+                        }
+                        OutputState::Address(addr) => {
+                            self.output_state = OutputState::X(addr, val);
+                        }
+                        OutputState::X(addr, x) => {
+                            self.output_state = OutputState::None;
+                            output.push((addr, x, val));
+                        }
                     }
-                    OutputState::X(addr, x) => {
-                        self.output_state = OutputState::None;
-                        output = Some((addr, x, val));
+                    i += 2;
+                }
+                5 => {
+                    let (in1, in2) = get2();
+                    if get_data!(mode1, in1) != 0 {
+                        i = get_data!(mode2, in2);
+                    } else {
+                        i += 3;
                     }
                 }
-                i += 2;
-            }
-            5 => {
-                let (in1, in2) = get2();
-                if get_data!(mode1, in1) != 0 {
-                    i = get_data!(mode2, in2);
-                } else {
-                    i += 3;
+                6 => {
+                    let (in1, in2) = get2();
+                    if get_data!(mode1, in1) == 0 {
+                        i = get_data!(mode2, in2);
+                    } else {
+                        i += 3;
+                    }
+                }
+                7 => {
+                    let (in1, in2, out) = get3();
+                    let res = if get_data!(mode1, in1) < get_data!(mode2, in2) {
+                        1
+                    } else {
+                        0
+                    };
+                    set_data!(mode3, out, res);
+                    i += 4;
+                }
+                8 => {
+                    let (in1, in2, out) = get3();
+                    let res = if get_data!(mode1, in1) == get_data!(mode2, in2) {
+                        1
+                    } else {
+                        0
+                    };
+                    set_data!(mode3, out, res);
+                    i += 4;
+                }
+                9 => {
+                    self.relative_base += get_data!(mode1, self.memory[&(i+1)]);
+                    i += 2;
+                }
+                99 => {
+                    self.halted = true;
+                    break;
+                }
+                _ => {
+                    panic!("Unknown op code {}", op);
                 }
             }
-            6 => {
-                let (in1, in2) = get2();
-                if get_data!(mode1, in1) == 0 {
-                    i = get_data!(mode2, in2);
-                } else {
-                    i += 3;
-                }
-            }
-            7 => {
-                let (in1, in2, out) = get3();
-                let res = if get_data!(mode1, in1) < get_data!(mode2, in2) {
-                    1
-                } else {
-                    0
-                };
-                set_data!(mode3, out, res);
-                i += 4;
-            }
-            8 => {
-                let (in1, in2, out) = get3();
-                let res = if get_data!(mode1, in1) == get_data!(mode2, in2) {
-                    1
-                } else {
-                    0
-                };
-                set_data!(mode3, out, res);
-                i += 4;
-            }
-            9 => {
-                self.relative_base += get_data!(mode1, self.memory[&(i+1)]);
-                i += 2;
-            }
-            99 => {
-            }
-            _ => {
-                panic!("Unknown op code {}", op);
-            }
+
+            self.i = i;
         }
-
-        self.i = i;
         return output;
     }
 }
