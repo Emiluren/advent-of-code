@@ -18,6 +18,8 @@ pub fn main() !void {
     var input_string = try read_input(allocator);
 
     var floor: i32 = 0;
+    var found_basement = false;
+    var position: i32 = 1;
     for (input_string) |c| {
         if (c == '(') {
             floor += 1;
@@ -26,9 +28,17 @@ pub fn main() !void {
         } else {
             unreachable;
         }
+
+        if (!found_basement) {
+            if (floor == -1) {
+                found_basement = true;
+            } else {
+                position += 1;
+            }
+        }
     }
 
     var stdout_file = try std.io.getStdOut();
     const stdout = &stdout_file.outStream().stream;
-    try stdout.print("Part 1: {}\n", floor);
+    try stdout.print("Part 1: {}\nPart 2: {}\n", floor, position);
 }
