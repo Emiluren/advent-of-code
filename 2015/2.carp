@@ -13,10 +13,14 @@
           side-1 (* length width)
           side-2 (* width height)
           side-3 (* height length)]
-      (+ (* 2 side-1)
-         (+ (* 2 side-2)
-            (+ (* 2 side-3)
-               (min (min side-1 side-2) side-3)))))))
+      (Array.sum &[(* 2 side-1)
+                   (* 2 side-2)
+                   (* 2 side-3)
+                   (min (min side-1 side-2)
+                        side-3)]))))
+
+(defn package-ribbon [width-length-height]
+  0)
 
 ;; 11456684 too high
 ;; 11606483

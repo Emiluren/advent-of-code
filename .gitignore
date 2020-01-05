@@ -8,3 +8,4 @@ target/
 /2018/16
 *.o
 a.out
+/2015/main.c
