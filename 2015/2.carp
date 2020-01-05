@@ -33,8 +33,6 @@
                                            &input-lines)]
     (let [packages-reqs (Array.copy-map &package-paper &package-dimensions)
           ribbon-reqs (Array.copy-map &package-ribbon &package-dimensions)]
-      (do (IO.println &(String.append "Part 1: " &(str (Array.sum
-                                                        &packages-reqs))))
+      (do (IO.println &(fmt "Part 1: %d" (Array.sum &packages-reqs)))
           ;; 95178 too low
-          (IO.println &(String.append "Part 2: " &(str (Array.sum
-                                                     &ribbon-reqs))))))))
+          (IO.println &(fmt "Part 2: %d" (Array.sum &ribbon-reqs)))))))
