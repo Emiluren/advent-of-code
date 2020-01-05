@@ -1,31 +1,40 @@
 (Project.config "output-directory" ".")
 (Project.config "title" "a.out")
 
-(def input-lines (lines &(IO.read-file "2input")))
+(def input-lines (Array.copy-filter &(fn [line]
+                                       (not (String.empty? line)))
+                                    &(lines &(IO.read-file "2input"))))
 
-(defn package-paper [line]
-  (if (String.empty? line)
-    0
-    (let [width-length-height (String.split-by line &[\x])
-          width (Int.from-string (Array.unsafe-nth &width-length-height 0))
-          length (Int.from-string (Array.unsafe-nth &width-length-height 1))
-          height (Int.from-string (Array.unsafe-nth &width-length-height 2))
-          side-1 (* length width)
-          side-2 (* width height)
-          side-3 (* height length)]
-      (Array.sum &[(* 2 side-1)
-                   (* 2 side-2)
-                   (* 2 side-3)
-                   (min (min side-1 side-2)
-                        side-3)]))))
+(defn package-paper [width-length-height]
+  (let [width @(Array.unsafe-nth width-length-height 0)
+        length @(Array.unsafe-nth width-length-height 1)
+        height @(Array.unsafe-nth width-length-height 2)
+        side-1 (* length width)
+        side-2 (* width height)
+        side-3 (* height length)]
+    (Array.sum &[(* 2 side-1)
+                 (* 2 side-2)
+                 (* 2 side-3)
+                 (min (min side-1 side-2)
+                      side-3)])))
 
 (defn package-ribbon [width-length-height]
-  0)
-
-;; 11456684 too high
-;; 11606483
+  (let [sorted-dimensions (Array.sort @width-length-height)
+        dim-1 @(Array.unsafe-nth &sorted-dimensions 0)
+        dim-2 @(Array.unsafe-nth &sorted-dimensions 1)
+        dim-3 @(Array.unsafe-nth &sorted-dimensions 2)]
+    (do (+ (* 2 (+ dim-1 dim-2))
+           (Array.reduce &(fn [a b] (* a @b)) 1 &[dim-1 dim-2 dim-3])))))
 
 (defn main []
-  (let [packages-reqs (Array.copy-map &package-paper &input-lines)]
-    (IO.println &(String.append "Part 1: " &(str (Array.sum
-                                                  &packages-reqs))))))
+  (let [package-dimensions (Array.copy-map &(fn [line]
+                                              (Array.copy-map &Int.from-string
+                                                              &(String.split-by line &[\x])))
+                                           &input-lines)]
+    (let [packages-reqs (Array.copy-map &package-paper &package-dimensions)
+          ribbon-reqs (Array.copy-map &package-ribbon &package-dimensions)]
+      (do (IO.println &(String.append "Part 1: " &(str (Array.sum
+                                                        &packages-reqs))))
+          ;; 95178 too low
+          (IO.println &(String.append "Part 2: " &(str (Array.sum
+                                                     &ribbon-reqs))))))))
