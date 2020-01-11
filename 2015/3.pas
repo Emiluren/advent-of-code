@@ -22,7 +22,8 @@ var
     pos: vec2;
     visitedPositions: array of vec2;
     c: char;
-    p: vec2;
+    posSanta: vec2;
+    posRobo: vec2;
 
 begin
     assign(inputFile, '3input');
@@ -51,6 +52,47 @@ begin
     end;
 
     writeln('Part 1: ', length(visitedPositions));
+
+    reset(inputFile);
+    posSanta.x := 0;
+    posSanta.y := 0;
+    posRobo.x := 0;
+    posRobo.y := 0;
+    setLength(visitedPositions, 1);
+    visitedPositions[0] := posSanta;
+
+    while not eof(inputFile) do
+    begin
+        read(inputFile, c);
+        case c of
+          '>': posSanta.x += 1;
+          '<': posSanta.x -= 1;
+          '^': posSanta.y += 1;
+          'v': posSanta.y -= 1;
+        end;
+
+        if not hasVisited(posSanta, visitedPositions) then
+        begin
+            setLength(visitedPositions, length(visitedPositions) + 1);
+            visitedPositions[length(visitedPositions) - 1] := posSanta;
+        end;
+
+        read(inputFile, c);
+        case c of
+          '>': posRobo.x += 1;
+          '<': posRobo.x -= 1;
+          '^': posRobo.y += 1;
+          'v': posRobo.y -= 1;
+        end;
+
+        if not hasVisited(posRobo, visitedPositions) then
+        begin
+            setLength(visitedPositions, length(visitedPositions) + 1);
+            visitedPositions[length(visitedPositions) - 1] := posRobo;
+        end;
+    end;
+
+    writeln('Part 2: ', length(visitedPositions));
 
     close(inputFile);
 end.
