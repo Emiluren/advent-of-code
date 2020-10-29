@@ -1,6 +1,12 @@
 const std = @import("std");
 
 pub fn main() !void {
+    const stdout = std.io.getStdOut().outStream();
+    try stdout.print("Part 1: {}\n", .{solve(5)});
+    try stdout.print("Part 2: {}\n", .{solve(6)});
+}
+
+pub fn solve(limit: usize) !usize {
     const input = "bgvyzdsv";
 
     var concatBuffer: [100]u8 = undefined;
@@ -14,15 +20,12 @@ pub fn main() !void {
         const hashString = try std.fmt.bufPrint(hashStringBuffer[0..], "{x}", .{hashBuffer});
 
         var i: usize = 0;
-        while (i < 5) : (i += 1) {
+        while (i < limit) : (i += 1) {
             if (hashString[i] != '0') {
                 continue :outer;
             }
         }
 
-        break;
+        return key;
     }
-
-    const stdout = std.io.getStdOut().outStream();
-    try stdout.print("Part 1: {}\n", .{key});
 }
