@@ -5,35 +5,12 @@ fn main() {
 
     let mut ids = Vec::new();
     for line in contents.lines() {
-        let chars: Vec<_> = line.chars().collect();
-
-        let mut row = 0;
-        for i in 0..7 {
-            match chars[i] {
-                'F' => {}
-                'B' => {
-                    row += 2_u32.pow(6 - i as u32);
-                }
-                _ => {
-                    panic!("Expected F or B, got {}", chars[i]);
-                }
-            }
-        }
-
-        let mut col = 0;
-        for i in 7..10 {
-            match chars[i] {
-                'L' => {}
-                'R' => {
-                    col += 2_u32.pow(9 - i as u32);
-                }
-                _ => {
-                    panic!("Expected L or R, got {}", chars[i]);
-                }
-            }
-        }
-
-        let id = row * 8 + col;
+        let id_string = line
+            .replace("F", "0")
+            .replace("B", "1")
+            .replace("L", "0")
+            .replace("R", "1");
+        let id = usize::from_str_radix(&id_string, 2).unwrap();
         ids.push(id);
     }
     ids.sort();
