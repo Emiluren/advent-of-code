@@ -3,7 +3,7 @@ use std::fs;
 fn main() {
     let contents = fs::read_to_string("5input").unwrap();
 
-    let mut max_id = 0;
+    let mut ids = Vec::new();
     for line in contents.lines() {
         let chars: Vec<_> = line.chars().collect();
 
@@ -34,10 +34,18 @@ fn main() {
         }
 
         let id = row * 8 + col;
-        if id > max_id {
-            max_id = id;
-        }
+        ids.push(id);
     }
+    ids.sort();
 
-    println!("Part 1: {}", max_id);
+    println!("Part 1: {}", ids[ids.len() - 1]);
+
+    let mut last_id = ids[0] - 1;
+    for id in ids {
+        if id != last_id + 1 {
+            println!("Part 2: {}", last_id + 1);
+            break;
+        }
+        last_id = id;
+    }
 }
