@@ -44,14 +44,16 @@ impl Direction {
 
 fn main() {
     let contents = fs::read_to_string("12input").unwrap();
+    let instructions: Vec<(char, i32)> = contents.lines().map(|line| {
+        let action = line.chars().nth(0).unwrap();
+        let amount = line.chars().skip(1).collect::<String>().parse().unwrap();
+        (action, amount)
+    }).collect();
 
     let mut pos_x: i32 = 0;
     let mut pos_y: i32 = 0;
     let mut dir = East;
-    for instruction in contents.lines() {
-        let action = instruction.chars().nth(0).unwrap();
-        let amount = instruction.chars().skip(1).collect::<String>().parse().unwrap();
-
+    for (action, amount) in instructions.iter().copied() {
         match action {
             'N' => pos_y += amount,
             'S' => pos_y -= amount,
@@ -70,4 +72,46 @@ fn main() {
     }
 
     println!("Part 1: {}", pos_x.abs() + pos_y.abs());
+
+    let mut pos_x: i32 = 0;
+    let mut pos_y: i32 = 0;
+    let mut dx: i32 = 10;
+    let mut dy: i32 = 1;
+    for (action, amount) in instructions.iter().copied() {
+        let mut turn_waypoint_right = |amount| {
+            let old_dx = dx;
+            let old_dy = dy;
+            match amount {
+                90 => {
+                    dx = dy;
+                    dy = -old_dx;
+                },
+                180 => {
+                    dx = -dx;
+                    dy = -old_dy;
+                },
+                270 => {
+                    dx = -dy;
+                    dy = old_dx;
+                },
+                _ => panic!("Unknown amount {}", amount),
+            }
+        };
+
+        match action {
+            'N' => dy += amount,
+            'S' => dy -= amount,
+            'E' => dx += amount,
+            'W' => dx -= amount,
+            'L' => turn_waypoint_right(360 - amount),
+            'R' => turn_waypoint_right(amount),
+            'F' => {
+                pos_x += dx * amount;
+                pos_y += dy * amount;
+            },
+            _ => panic!("Unknown action {}", action),
+        }
+    }
+
+    println!("Part 2: {}", pos_x.abs() + pos_y.abs());
 }
