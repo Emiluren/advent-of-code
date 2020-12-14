@@ -22,12 +22,13 @@ fn main() {
 
     let color_map = &[
         0, 0, 0,
-        0xAA, 0xAA, 0xAA,
+        0x80, 0x80, 0x80,
         0xFF, 0xFF, 0xFF
     ];
 
     let mut image = fs::File::create("part1.gif").unwrap();
     let mut encoder = gif::Encoder::new(&mut image, width as u16, height as u16, color_map).unwrap();
+    let mut frame_data = original_grid.clone();
     loop {
         let mut changed = false;
 
@@ -56,6 +57,8 @@ fn main() {
                     changed = true;
                 } else {
                     grid2[index] = seat;
+                    // Only output cells that have stabilized to prevent flashing
+                    frame_data[index] = seat;
                 }
             }
         }
@@ -65,7 +68,7 @@ fn main() {
         let mut frame = gif::Frame::default();
         frame.width = width as u16;
         frame.height = height as u16;
-        frame.buffer = Cow::Borrowed(&*grid);
+        frame.buffer = Cow::Borrowed(&*frame_data);
         frame.delay = 30;
         encoder.write_frame(&frame).unwrap();
 
@@ -80,6 +83,7 @@ fn main() {
 
     let mut image = fs::File::create("part2.gif").unwrap();
     let mut encoder = gif::Encoder::new(&mut image, width as u16, height as u16, color_map).unwrap();
+    let mut frame_data = original_grid.clone();
 
     let mut grid = original_grid.clone();
     loop {
@@ -119,6 +123,8 @@ fn main() {
                     changed = true;
                 } else {
                     grid2[index] = seat;
+                    // Only output cells that have stabilized to prevent flashing
+                    frame_data[index] = seat;
                 }
             }
         }
@@ -128,7 +134,7 @@ fn main() {
         let mut frame = gif::Frame::default();
         frame.width = width as u16;
         frame.height = height as u16;
-        frame.buffer = Cow::Borrowed(&*grid);
+        frame.buffer = Cow::Borrowed(&*frame_data);
         frame.delay = 30;
         encoder.write_frame(&frame).unwrap();
 
