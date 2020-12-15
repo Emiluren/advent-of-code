@@ -3,13 +3,8 @@ use std::collections::HashMap;
 fn main() {
     let input = [0,8,15,2,12,1,4];
 
-    let mut time_latest: HashMap<usize, usize> = input
-        .iter()
-        .take(input.len() - 1)
-        .copied()
-        .enumerate()
-        .map(|(i, n)| (n, i))
-        .collect();
+    let mut time_latest: HashMap<usize, usize> =
+        input.iter().copied().enumerate().map(|(i, n)| (n, i)).collect();
 
     let mut last_num = input[input.len() - 1];
     for i in input.len()..30_000_000 {
