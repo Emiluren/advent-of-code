@@ -9,3 +9,4 @@ target/
 *.o
 a.out
 /2015/main.c
+/*/deps/
