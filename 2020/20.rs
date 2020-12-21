@@ -1,8 +1,54 @@
+#[derive(Debug)]
 struct Tile {
-    id: usize,
+    id: u16,
     content: Vec<Vec<char>>,
-    sides: [String; 4],
-    neighbours: [Option<usize>; 4],
+    sides: [Vec<char>; 4],
+    neighbours: [Option<TileConnection>; 4],
+}
+
+#[derive(Copy, Clone, Debug)]
+struct TileConnection {
+    other: usize,
+    other_side: usize,
+    flipped: bool,
+}
+
+impl Tile {
+    fn rotate_clockwise(&mut self, steps: usize) {
+        let size = self.content.len();
+        let old_content = self.content.clone();
+        for row in 0..size {
+            for col in 0..size {
+                match steps {
+                    0 => {}
+                    1 => {
+                        self.content[col][row] = old_content[row][col];
+                    },
+                    2 => {
+                        self.content[size-row][size-col] = old_content[row][col];
+                    },
+                    3 => {
+                        self.content[row][col] = old_content[col][row];
+                    },
+                    _ => panic!("Invalid step amount {}", steps),
+                }
+            }
+        }
+
+        self.sides.rotate_right(steps);
+        self.neighbours.rotate_right(steps);
+    }
+
+    fn flip(&mut self) {
+        for row in &mut self.content {
+            row.reverse();
+        }
+
+        for side in &mut self.sides {
+            side.reverse();
+        }
+        self.sides.swap(1, 3)
+    }
 }
 
 fn main() {
@@ -21,8 +67,8 @@ fn main() {
         let sides = [
             content[0].iter().cloned().collect(),
             content.iter().map(|row| row[9]).collect(),
-            content[9].iter().cloned().collect(),
-            content.iter().map(|row| row[0]).collect(),
+            content[9].iter().cloned().rev().collect(),
+            content.iter().map(|row| row[0]).rev().collect(),
         ];
         tiles.push(Tile {
             id,
@@ -36,32 +82,89 @@ fn main() {
     for t1 in 0..tiles.len() {
         for t2 in (t1+1)..tiles.len() {
             for i in 0..4 {
-                if tiles[t1].neighbours[i] != None {
+                if tiles[t1].neighbours[i].is_some() {
                     continue;
                 }
 
                 for j in 0..4 {
-                    if tiles[t2].neighbours[j] != None {
+                    let mut found_neighbour = false;
+                    let mut flipped = false;
+
+                    if tiles[t2].neighbours[j].is_some() {
                         continue;
                     }
 
-                    let rev2: String = tiles[t2].sides[j].chars().rev().collect();
-                    if tiles[t1].sides[i] == tiles[t2].sides[j] || tiles[t1].sides[i] == rev2 {
-                        tiles[t1].neighbours[i] = Some(tiles[t2].id);
-                        tiles[t2].neighbours[j] = Some(tiles[t1].id);
+                    if tiles[t1].sides[i] == tiles[t2].sides[j] {
+                        found_neighbour = true;
+                        flipped = true; // We should expect the other side to be reversed
+                    } else {
+                        let rev2: Vec<char> = tiles[t2].sides[j].iter().copied().rev().collect();
+                        if tiles[t1].sides[i] == rev2 {
+                            found_neighbour = true;
+                        }
+                    }
+
+                    if found_neighbour {
+                        tiles[t1].neighbours[i] = Some(TileConnection {
+                            other: t2,
+                            other_side: j,
+                            flipped
+                        });
+                        tiles[t2].neighbours[j] = Some(TileConnection {
+                            other: t1,
+                            other_side: i,
+                            flipped
+                        });
                     }
                 }
             }
         }
     }
 
-    let corner_product: usize = tiles.iter().filter_map(|t| {
-        let neighbour_count = t.neighbours.iter().filter(|n| n.is_some()).count();
-        if neighbour_count == 2 {
-            Some(t.id)
-        } else {
-            None
-        }
-    }).product();
+    let corners: Vec<_> = (0..tiles.len()).filter(|i| {
+        let neighbour_count = tiles[*i].neighbours.iter().filter(|n| n.is_some()).count();
+        neighbour_count == 2
+    }).collect();
+
+    dbg!(&corners);
+
+    let corner_product: u64 = corners.iter().map(|i| tiles[*i].id as u64).product();
     println!("Part 1: {}", corner_product);
+
+    let mut layout = [[0; 12]; 12];
+    layout[0][0] = corners[0];
+
+    let right_dir = tiles[corners[0]].neighbours.iter()
+        .enumerate()
+        .filter_map(|(i, c)| c.map(|_| i))
+        .nth(0)
+        .unwrap();
+    let down_dir = (right_dir + 1) % 4;
+
+    // TODO: figure out left collumn first
+
+    for row in 0..1 { // TODO 0..12
+        let mut right_dir = right_dir; // TODO: rotate & flip instead of mutating this
+        for col in 1..12 {
+            let left_tile = layout[row][col-1];
+            let conn = tiles[left_tile].neighbours[right_dir].unwrap();
+
+            layout[row][col] = conn.other;
+            right_dir = (conn.other_side + 2) % 4;
+        }
+    }
+    dbg!(&layout[0]);
+
+    for i in 0..10 {
+        for t in &layout[0] {
+            print!("{} ", tiles[*t].content[i].iter().collect::<String>());
+        }
+        println!();
+    }
+
+    let sea_monster: Vec<Vec<char>> = vec![
+        "                  # ".chars().collect(),
+        "#    ##    ##    ###".chars().collect(),
+        " #  #  #  #  #  #   ".chars().collect(),
+    ];
 }
