@@ -12,27 +12,31 @@ struct TileConnection {
     flipped: bool,
 }
 
-impl Tile {
-    fn rotate_clockwise(&mut self, steps: usize) {
-        let size = self.content.len();
-        let old_content = self.content.clone();
-        for row in 0..size {
-            for col in 0..size {
-                match steps {
-                    0 => {}
-                    1 => {
-                        self.content[row][col] = old_content[size-col-1][row];
-                    },
-                    2 => {
-                        self.content[size-row-1][size-col-1] = old_content[row][col];
-                    },
-                    3 => {
-                        self.content[size-col-1][row] = old_content[row][col];
-                    },
-                    _ => panic!("Invalid step amount {}", steps),
-                }
+fn rotate_vec_clockwise(vec: &mut Vec<Vec<char>>, steps: usize) {
+    let size = vec.len();
+    let old_content = vec.clone();
+    for row in 0..size {
+        for col in 0..size {
+            match steps {
+                0 => {}
+                1 => {
+                    vec[row][col] = old_content[size-col-1][row];
+                },
+                2 => {
+                    vec[size-row-1][size-col-1] = old_content[row][col];
+                },
+                3 => {
+                    vec[size-col-1][row] = old_content[row][col];
+                },
+                _ => panic!("Invalid step amount {}", steps),
             }
         }
+    }
+}
+
+impl Tile {
+    fn rotate_clockwise(&mut self, steps: usize) {
+        rotate_vec_clockwise(&mut self.content, steps);
 
         self.sides.rotate_right(steps);
         self.neighbours.rotate_right(steps);
@@ -224,11 +228,64 @@ fn main() {
         println!();
     }
 
+    let mut image = vec![Vec::new(); 12*8];
+    for row in 0..(12*8) {
+        let tile_row = row / 8;
+        for col in 0..12 {
+            let tile = layout[tile_row][col];
+            let row_vec = &tiles[tile].content[1 + row - tile_row*8][1..9];
+            image[row].extend_from_slice(row_vec);
+        }
+        println!("{}", image[row].iter().collect::<String>());
+    }
     let sea_monster: Vec<Vec<char>> = vec![
         "                  # ".chars().collect(),
         "#    ##    ##    ###".chars().collect(),
         " #  #  #  #  #  #   ".chars().collect(),
     ];
+    let monster_length = sea_monster[0].len();
+
+    let count_hashes = |vec: &[Vec<char>]| vec.iter()
+        .map(|row| row.iter().filter(|c| **c == '#').count())
+        .sum::<usize>();
+    let image_hash_count = count_hashes(&image);
+    let monster_hash_count = count_hashes(&sea_monster);
+
+    for flip in &[false, true] {
+        if *flip {
+            image.reverse();
+        }
+
+        for i in 0..4 {
+            if i != 0 {
+                rotate_vec_clockwise(&mut image, 1);
+            }
+
+            let mut monster_count = 0;
+            for row_offset in 0..(image.len()-3) {
+                'monster_search: for col_offset in 0..(image[0].len()-monster_length) {
+                    for row in 0..3 {
+                        for col in 0..monster_length {
+                            if sea_monster[row][col] == ' ' {
+                                continue;
+                            }
+
+                            if image[row_offset+row][col_offset+col] != '#' {
+                                continue 'monster_search;
+                            }
+                        }
+                    }
+
+                    monster_count += 1;
+                }
+            }
+
+            if monster_count != 0 {
+                println!("Part 2: {}", image_hash_count - monster_count*monster_hash_count);
+                return;
+            }
+        }
+    }
 }
 
 fn print_tiles(row: &[usize], tiles: &[Tile]) {
@@ -242,5 +299,4 @@ fn print_tiles(row: &[usize], tiles: &[Tile]) {
         }
         println!();
     }
-
 }
