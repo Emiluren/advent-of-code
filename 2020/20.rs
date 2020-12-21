@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Tile {
     id: u16,
     content: Vec<Vec<char>>,
@@ -9,7 +9,6 @@ struct Tile {
 #[derive(Copy, Clone, Debug)]
 struct TileConnection {
     other: usize,
-    other_side: usize,
     flipped: bool,
 }
 
@@ -22,13 +21,13 @@ impl Tile {
                 match steps {
                     0 => {}
                     1 => {
-                        self.content[col][row] = old_content[row][col];
+                        self.content[row][col] = old_content[size-col-1][row];
                     },
                     2 => {
-                        self.content[size-row][size-col] = old_content[row][col];
+                        self.content[size-row-1][size-col-1] = old_content[row][col];
                     },
                     3 => {
-                        self.content[row][col] = old_content[col][row];
+                        self.content[size-col-1][row] = old_content[row][col];
                     },
                     _ => panic!("Invalid step amount {}", steps),
                 }
@@ -40,14 +39,10 @@ impl Tile {
     }
 
     fn flip(&mut self) {
-        for row in &mut self.content {
-            row.reverse();
-        }
-
-        for side in &mut self.sides {
-            side.reverse();
-        }
-        self.sides.swap(1, 3)
+        self.content.reverse();
+        self.sides.reverse();
+        self.sides.swap(0, 2);
+        self.neighbours.swap(0, 2);
     }
 }
 
@@ -107,12 +102,10 @@ fn main() {
                     if found_neighbour {
                         tiles[t1].neighbours[i] = Some(TileConnection {
                             other: t2,
-                            other_side: j,
                             flipped
                         });
                         tiles[t2].neighbours[j] = Some(TileConnection {
                             other: t1,
-                            other_side: i,
                             flipped
                         });
                     }
@@ -134,31 +127,100 @@ fn main() {
     let mut layout = [[0; 12]; 12];
     layout[0][0] = corners[0];
 
-    let right_dir = tiles[corners[0]].neighbours.iter()
+    let right_dir = 1;
+    let down_dir = 2;
+    // rotated_right_dir actually happened to be 1 for my data so this code does nothing
+    let rotated_right_dir = tiles[corners[0]].neighbours.iter()
         .enumerate()
         .filter_map(|(i, c)| c.map(|_| i))
         .nth(0)
         .unwrap();
-    let down_dir = (right_dir + 1) % 4;
+    let steps = if rotated_right_dir > right_dir {
+        4 - (rotated_right_dir - right_dir)
+    } else {
+        right_dir - rotated_right_dir
+    };
+    tiles[corners[0]].rotate_clockwise(steps);
 
-    // TODO: figure out left collumn first
+    let mut flipped_above = false;
+    for row in 0..12 {
+        let mut flipped_left = false;
 
-    for row in 0..1 { // TODO 0..12
-        let mut right_dir = right_dir; // TODO: rotate & flip instead of mutating this
+        // A lot of duplicated code here but at least it works
+        if row > 0 {
+            let above_tile = layout[row-1][0];
+            let above_conn = tiles[above_tile].neighbours[down_dir].unwrap();
+            let this_tile = above_conn.other;
+
+            layout[row][0] = this_tile;
+            if above_conn.flipped != flipped_above {
+                tiles[this_tile].flip();
+                flipped_above = true;
+                flipped_left = true;
+            } else {
+                flipped_above = false;
+            }
+
+            let rotated_up_dir = tiles[this_tile].neighbours.iter()
+                .enumerate()
+                .find_map(|(i, conn_opt)| {
+                    conn_opt.and_then(|conn| {
+                        if conn.other == above_tile {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    })
+                }).unwrap();
+            let rotated_down_dir = (rotated_up_dir + 2) % 4;
+
+            let steps = if rotated_down_dir > down_dir {
+                4 - (rotated_down_dir - down_dir)
+            } else {
+                down_dir - rotated_down_dir
+            };
+
+            tiles[this_tile].rotate_clockwise(steps);
+        }
+
         for col in 1..12 {
             let left_tile = layout[row][col-1];
-            let conn = tiles[left_tile].neighbours[right_dir].unwrap();
+            let left_conn = tiles[left_tile].neighbours[right_dir].unwrap();
+            let this_tile = left_conn.other;
 
-            layout[row][col] = conn.other;
-            right_dir = (conn.other_side + 2) % 4;
+            layout[row][col] = this_tile;
+            if left_conn.flipped != flipped_left {
+                tiles[this_tile].flip();
+                flipped_left = true;
+            } else {
+                flipped_left = false;
+            }
+
+            let rotated_left_dir = tiles[this_tile].neighbours.iter()
+                .enumerate()
+                .find_map(|(i, conn_opt)| {
+                    conn_opt.and_then(|conn| {
+                        if conn.other == left_tile {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    })
+                }).unwrap();
+            let rotated_right_dir = (rotated_left_dir + 2) % 4;
+
+            let steps = if rotated_right_dir > right_dir {
+                4 - (rotated_right_dir - right_dir)
+            } else {
+                right_dir - rotated_right_dir
+            };
+
+            tiles[this_tile].rotate_clockwise(steps);
         }
     }
-    dbg!(&layout[0]);
 
-    for i in 0..10 {
-        for t in &layout[0] {
-            print!("{} ", tiles[*t].content[i].iter().collect::<String>());
-        }
+    for i in 0..12 {
+        print_tiles(&layout[i], &tiles);
         println!();
     }
 
@@ -167,4 +229,18 @@ fn main() {
         "#    ##    ##    ###".chars().collect(),
         " #  #  #  #  #  #   ".chars().collect(),
     ];
+}
+
+fn print_tiles(row: &[usize], tiles: &[Tile]) {
+    for t in row {
+        print!("{:^11}", t);
+    }
+    println!();
+    for i in 0..10 {
+        for t in row {
+            print!("{} ", tiles[*t].content[i].iter().collect::<String>());
+        }
+        println!();
+    }
+
 }
