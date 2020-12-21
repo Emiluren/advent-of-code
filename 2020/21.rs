@@ -44,12 +44,51 @@ fn main() {
     }
 
     let mut safe_ingredients = HashSet::new();
-    for (ingred, allergens) in allergen_suspicions {
+    for (ingred, allergens) in &allergen_suspicions {
         if allergens.into_iter().all(|gen| { cannot_contain[gen].contains(ingred) }) {
-            safe_ingredients.insert(ingred);
+            safe_ingredients.insert(ingred.clone());
         }
     }
 
-    let count: usize = foods.into_iter().map(|f| f.iter().filter(|i| safe_ingredients.contains(*i)).count()).sum();
+    let count: usize = foods.iter().map(|f| f.iter().filter(|i| safe_ingredients.contains(*i)).count()).sum();
     println!("Part 1: {}", count);
+
+    let mut allergen_mappings: Vec<(&str, Vec<&str>)> = allergen_suspicions.iter().filter_map(|(ingred, allergens)| {
+        if safe_ingredients.contains(ingred) {
+            None
+        } else {
+            Some((
+                *ingred,
+                allergens.iter()
+                    .filter(|gen| { !cannot_contain[*gen].contains(ingred)})
+                    .cloned()
+                    .collect(),
+            ))
+        }
+    }).collect();
+
+    let mut found_out: HashSet<_> = allergen_mappings.iter().filter_map(|(_, allergens)| {
+        if allergens.len() == 1 {
+            Some(allergens[0])
+        } else {
+            None
+        }
+    }).collect();
+
+    while found_out.len() < allergen_mappings.len() {
+        for (_, allergens) in &mut allergen_mappings {
+            if allergens.len() == 1 {
+                continue;
+            }
+
+            allergens.retain(|gen| { !found_out.contains(gen) });
+            if allergens.len() == 1 {
+                found_out.insert(allergens[0]);
+            }
+        }
+    }
+
+    allergen_mappings.sort_by_key(|(_, allergens)| allergens[0]);
+    let dangerous: Vec<&str> = allergen_mappings.into_iter().map(|(ingredient, _)| ingredient).collect();
+    println!("Part 2: {}", dangerous.join(","));
 }
