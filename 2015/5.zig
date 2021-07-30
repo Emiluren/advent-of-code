@@ -1,23 +1,21 @@
 const std = @import("std");
 
 pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-
     var input_file = try std.fs.cwd().openFile("5input", .{});
     defer input_file.close();
 
-    const in_stream = &input_file.inStream();
+    const reader = &input_file.reader();
 
     const vowels = "aeiou";
 
     var nice_strings: usize = 0;
     while (true) {
         var buffer: [16]u8 = undefined;
-        const read_bytes = try in_stream.read(&buffer);
+        const read_bytes = try reader.read(&buffer);
         if (read_bytes < 16) {
             break;
         }
-        try in_stream.skipBytes(1);
+        try reader.skipBytes(1, .{});
 
         var last_letter: ?u8 = null;
         var vowel_count: u8 = 0;
@@ -52,6 +50,6 @@ pub fn main() !void {
             nice_strings += 1;
         }
     }
-    const stdout = std.io.getStdOut().outStream();
+    const stdout = std.io.getStdOut().writer();
     try stdout.print("Part 1: {}\n", .{ nice_strings });
 }
