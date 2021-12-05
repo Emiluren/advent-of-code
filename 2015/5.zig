@@ -1,14 +1,18 @@
 const std = @import("std");
 
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
+const vowels = "aeiou";
 
+pub fn main() !void {
     var input_file = try std.fs.cwd().openFile("5input", .{});
     defer input_file.close();
 
-    const in_stream = &input_file.inStream();
+    const stdout = std.io.getStdOut().outStream();
+    try stdout.print("Part 1: {}\n", .{ try part1() });
+    //try part2();
+}
 
-    const vowels = "aeiou";
+fn part1() !usize {
+    const in_stream = &input_file.inStream();
 
     var nice_strings: usize = 0;
     while (true) {
@@ -52,6 +56,6 @@ pub fn main() !void {
             nice_strings += 1;
         }
     }
-    const stdout = std.io.getStdOut().outStream();
-    try stdout.print("Part 1: {}\n", .{ nice_strings });
+
+    return nice_strings;
 }
