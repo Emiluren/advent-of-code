@@ -1,33 +1,40 @@
 fn main() {
     let mut marked = vec![[[false; 5]; 5]; 100];
-    let mut winning_i = None;
-    let mut last_num = 0;
+    let mut score1 = None;
+
+    let mut has_won = vec![false; 100];
+    let mut score2 = None;
 
     'outer: for n in NUMBERS {
         for (i, board) in BOARDS.iter().enumerate() {
             for (r, row) in board.iter().enumerate() {
                 for (c, val) in row.iter().enumerate() {
                     if n == *val {
+                        //if i == 2 { println!("marking {}", n); }
                         let mark_board = &mut marked[i];
                         mark_board[r][c] = true;
-                        if mark_board[r].iter().all(|v| *v) && mark_board.iter().all(|mr| mr[c]) {
-                            winning_i = Some(i);
-                            last_num = n;
-                            break 'outer;
+                        if mark_board[r].iter().all(|v| *v) || mark_board.iter().all(|mr| mr[c]) {
+                            if score1 == None {
+                                score1 = Some(sum_unmarked(board, mark_board) * n as u16);
+                            }
+                            has_won[i] = true;
+                            if has_won.iter().all(|v| *v) {
+                                score2 = Some(sum_unmarked(board, mark_board) * n as u16);
+                                break 'outer;
+                            }
                         }
                     }
                 }
             }
         }
+        //print_board(&marked[2]);
     }
 
-    let winning_i = winning_i.unwrap();
-    let b = BOARDS[winning_i];
-    let mb = marked[winning_i];
+    println!("Part 1: {}", score1.unwrap());
+    println!("Part 2: {}", score2.unwrap());
+}
 
-    dbg!(&b);
-    dbg!(&mb);
-
+fn sum_unmarked(b: &[[u8; 5]; 5], mb: &[[bool; 5]; 5]) -> u16 {
     let mut sum = 0;
     for (r, row) in mb.iter().enumerate() {
         for (c, is_marked) in row.iter().enumerate() {
@@ -36,10 +43,43 @@ fn main() {
             }
         }
     }
-    println!("Part 1: {}", sum * last_num as u16);
+    sum
 }
 
+fn print_board<T: std::fmt::Display>(b: &[[T; 5]; 5]) {
+    for row in b {
+        for v in row {
+            print!("{} ", v);
+        }
+        println!();
+    }
+    println!();
+}
+
+//const NUMBERS: [u8; 27] = [7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1];
 const NUMBERS: [u8; 100] = [42,32,13,22,91,2,88,85,53,87,37,33,76,98,89,19,69,9,62,21,38,49,54,81,0,26,79,36,57,18,4,40,31,80,24,64,77,97,70,6,73,23,20,47,45,51,74,25,95,96,58,92,94,11,39,63,65,99,48,83,29,34,44,75,55,17,14,56,8,82,59,52,46,90,5,41,60,67,16,1,15,61,71,66,72,30,28,3,43,27,78,10,86,7,50,35,84,12,93,68];
+
+// const BOARDS: [[[u8; 5]; 5]; 3] = [
+//     [
+//         [22, 13, 17, 11,  0],
+//         [ 8,  2, 23,  4, 24],
+//         [21,  9, 14, 16,  7],
+//         [ 6, 10,  3, 18,  5],
+//         [ 1, 12, 20, 15, 19],
+//     ],[
+//         [ 3, 15,  0,  2, 22],
+//         [ 9, 18, 13, 17,  5],
+//         [19,  8,  7, 25, 23],
+//         [20, 11, 10, 24,  4],
+//         [14, 21, 16, 12,  6],
+//     ],[
+//         [14, 21, 17, 24,  4],
+//         [10, 16, 15,  9, 19],
+//         [18,  8, 23, 26, 20],
+//         [22, 11, 13,  6,  5],
+//         [ 2,  0, 12,  3,  7],
+//     ]
+// ];
 
 const BOARDS: [[[u8; 5]; 5]; 100] = [
     [
