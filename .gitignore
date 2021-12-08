@@ -10,3 +10,5 @@ target/
 a.out
 /2015/main.c
 /*/deps/
+[1-9]input
+[1-9][0-9]input
