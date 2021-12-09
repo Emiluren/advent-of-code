@@ -28,97 +28,39 @@ fn main() {
         "abcdefg",
         "abcdfg",
     ];
-    let mut dig_segs = vec![BTreeSet::new(); 10];
     let mut count_to_dig = vec![Vec::new(); 8];
-    let mut segs_to_dig = BTreeMap::new();
     for (i, ds) in dig_seg_str.iter().enumerate() {
-        let segs: BTreeSet<char> = ds.chars().collect();
-        count_to_dig[segs.len()].push(i);
-        segs_to_dig.insert(segs.clone(), i);
-        dig_segs.push(segs);
+        count_to_dig[ds.chars().count()].push(i);
     }
 
+    // part 2 solution was stolen from /u/4HbQ
     let mut count_1478 = 0;
     let mut sum = 0;
     for (signal_patterns, output_values) in input {
-        for pat in &output_values {
-            if count_to_dig[pat.len()].len() == 1 {
+        let length_map: BTreeMap<usize, _> = signal_patterns.into_iter().map(|s| (s.len(), s.clone())).collect();
+        for (i, pat) in output_values.iter().enumerate() {
+            let l = pat.len();
+            if count_to_dig[l].len() == 1 {
                 count_1478 += 1;
             }
-        }
-
-        let map = find_mapping(&dig_segs, &signal_patterns, BTreeMap::new()).unwrap();
-        for (i, pat) in output_values.iter().enumerate() {
-            let translated = pat.iter().map(|c| map[c]).collect();
-            sum += 10_usize.pow(3-i as u32) * segs_to_dig[&translated];
+            let inters_4 = pat.intersection(&length_map[&4]).count();
+            let inters_1 = pat.intersection(&length_map[&2]).count();
+            let n = match (l, inters_4, inters_1) {
+                (2,_,_) => 1,
+                (3,_,_) => 7,
+                (4,_,_) => 4,
+                (7,_,_) => 8,
+                (5,2,_) => 2,
+                (5,3,1) => 5,
+                (5,3,2) => 3,
+                (6,4,_) => 9,
+                (6,3,1) => 6,
+                (6,3,2) => 0,
+                _ => panic!("something's wrong"),
+            };
+            sum += 10_usize.pow(3-i as u32) * n;
         }
     }
     println!("Part 1: {}", count_1478);
     println!("Part 2: {}", sum);
-}
-
-const SEGS: &'static str = "abcdefg";
-
-fn find_mapping(
-    dig_segs: &[BTreeSet<char>],
-    signal_patterns: &[BTreeSet<char>],
-    current_map: BTreeMap<char, char>,
-) -> Option<BTreeMap<char, char>> {
-    if !valid_map(dig_segs, signal_patterns, &current_map) {
-        return None;
-    }
-    if SEGS.chars().all(|c| current_map.contains_key(&c)) {
-        return Some(current_map);
-    }
-
-    for c in SEGS.chars() {
-        if !current_map.contains_key(&c) {
-            let taken: BTreeSet<char> = current_map.values().cloned().collect();
-            for c2 in SEGS.chars().filter(|c2| !taken.contains(c2)) {
-                let mut map = current_map.clone();
-                map.insert(c, c2);
-                let new_map = find_mapping(dig_segs, signal_patterns, map);
-                if new_map.is_some() {
-                    return new_map;
-                }
-            }
-        }
-    }
-    None
-}
-
-fn valid_map(
-    dig_segs: &[BTreeSet<char>],
-    signal_patterns: &[BTreeSet<char>],
-    current_map: &BTreeMap<char, char>,
-) -> bool {
-    for pat in signal_patterns {
-        let possibilities: Vec<_> = dig_segs.iter().filter(|ds| ds.len() == pat.len()).collect();
-        let mut found_pos = false;
-        for pos in possibilities {
-            if pat.iter().all(|c| !current_map.contains_key(&c) || pos.contains(&current_map[c])) {
-                found_pos = true;
-                break;
-            }
-        }
-        if !found_pos {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn print_alts(dig_rep: &[Vec<BTreeSet<char>>]) {
-    for (i, alts) in dig_rep.iter().enumerate() {
-        print!("{} ", i);
-        for (j, alt) in alts.iter().enumerate() {
-            for c in alt {
-                print!("{}", c);
-            }
-            if j != alts.len() - 1 {
-                print!(" ");
-            }
-        }
-        println!();
-    }
 }
