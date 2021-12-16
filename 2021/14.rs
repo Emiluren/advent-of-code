@@ -8,7 +8,8 @@ fn main() -> std::io::Result<()> {
     file.read_to_string(&mut contents)?;
     let mut lines = contents.lines();
 
-    let mut state: Vec<_> = lines.next().unwrap().chars().collect();
+    let first_line = lines.next().unwrap();
+    let last_c = first_line.chars().last().unwrap();
     lines.next().unwrap();
 
     let mut rules = HashMap::new();
@@ -21,38 +22,42 @@ fn main() -> std::io::Result<()> {
         );
     }
 
-    for ((c1, c2), insert) in &rules {
-        println!("{}{} -> {}", c1, c2, insert);
+    let mut state = HashMap::new();
+    for (c1, c2) in first_line.chars().zip(first_line.chars().skip(1)) {
+        *state.entry((c1, c2)).or_insert(0) += 1;
     }
 
     for _ in 0..10 {
-        //println!("i = {}", i);
-        //dbg!(state.iter().collect::<String>());
         state = run_iteration(&state, &rules);
     }
+    println!("Part 1: {}", state_score(&state, last_c));
 
-    let mut char_count = HashMap::new();
-    for c in state {
-        *char_count.entry(c).or_insert(0) += 1;
+    for _ in 10..40 {
+        state = run_iteration(&state, &rules);
     }
-    dbg!(&char_count);
-    let mut count_vec: Vec<_> = char_count.values().copied().collect();
-    count_vec.sort();
-
-    let l = count_vec.len();
-    println!("Part 1: {}", count_vec[l-1] - count_vec[0]);
+    println!("Part 2: {}", state_score(&state, last_c));
 
     Ok(())
 }
 
-fn run_iteration(state: &[char], rules: &HashMap<(char, char), char>) -> Vec<char> {
-    let mut new_state = Vec::new();
-    for (c1, c2) in state.iter().copied().take(state.len()-1).zip(state.iter().copied().skip(1)) {
-        new_state.push(c1);
+fn run_iteration(old_state: &HashMap<(char, char), usize>, rules: &HashMap<(char, char), char>) -> HashMap<(char, char), usize> {
+    let mut state = old_state.clone();
+    for ((c1, c2), count) in old_state {
+        let (c1, c2) = (*c1, *c2);
         if let Some(insert) = rules.get(&(c1, c2)) {
-            new_state.push(*insert);
+            *state.get_mut(&(c1, c2)).unwrap() -= count;
+            *state.entry((c1, *insert)).or_insert(0) += count;
+            *state.entry((*insert, c2)).or_insert(0) += count;
         }
     }
-    new_state.push(state[state.len()-1]);
-    new_state
+    state
+}
+
+fn state_score(state: &HashMap<(char, char), usize>, last_c: char) -> usize {
+    let mut char_count = HashMap::new();
+    for ((c1, _), count) in state {
+        *char_count.entry(c1).or_insert(0) += count;
+    }
+    *char_count.entry(&last_c).or_insert(0) += 1;
+    char_count.values().max().unwrap() - char_count.values().min().unwrap()
 }
