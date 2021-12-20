@@ -1,0 +1,23 @@
+(defun read-left-bracket (stream char)
+  (declare (ignore char))
+  (let* ((first-obj (read stream t nil t))
+         (next-char (peek-char t stream t nil t)))
+    (if (char= next-char #\,)
+          (read-char stream)
+          (error "Expected comma, got ~c" next-char))
+    (let* ((snd-obj (read stream t nil t))
+           (next-char (peek-char t stream t nil t)))
+      (if (char= next-char #\])
+          (read-char stream)
+          (error "Expected closing bracket ], got ~c" next-char))
+      (cons first-obj snd-obj))))
+
+(defun read-from-input-file ()
+  (with-open-file (in "18input" :direction :input)
+   (let ((*readtable* (copy-readtable)))
+     (set-macro-character #\[ 'read-left-bracket)
+     (set-macro-character #\] (get-macro-character #\)))
+     (loop
+       for line = (read-line in nil)
+       while line
+       collect (read-from-string line)))))
