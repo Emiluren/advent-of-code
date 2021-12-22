@@ -1,15 +1,49 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::rc::Rc;
 
-#[derive(Clone)]
-enum Snailfish { Pair(Rc<Snailfish>, Rc<Snailfish>), V(u8) }
+enum Snailfish { Pair(Box<(Snailfish, Snailfish)>), V(u8) }
 use Snailfish::*;
+
+enum Diff<C, S> { Changed(C), Same(S) }
+
+impl<C, S> Diff<C, S> {
+    fn try_if_same(self, f: impl Fn(S) -> Diff<C, S>) -> Diff<C, S> {
+        match self {
+            Diff::Changed(s) => Diff::Changed(s),
+            Diff::Same(s) => f(s),
+        }
+    }
+
+    fn map_changed(self, f: impl Fn(C) -> C) -> Diff<C, S> {
+        match self {
+            Diff::Changed(s) => Diff::Changed(f(s)),
+            Diff::Same(s) => Diff::Same(s),
+        }
+    }
+}
+
+// struct ConsFn {
+//     memory: &'a mut [(Snailfish, Snailfish)],
+//     current: usize,
+// }
+
+// impl ConsFn {
+//     fn new(memory: &'a mut [(Snailfish, Snailfish)]) -> ConsFn {
+//         ConsFn { memory, current: 0 }
+//     }
+
+//     fn cons(&'a mut self, sn1: Snailfish, sn2: Snailfish) -> Snailfish {
+//         let new = &mut self.memory[self.current];
+//         *new = (sn1, sn2);
+//         self.current += 1;
+//         Pair(new)
+//     }
+// }
 
 impl std::fmt::Display for Snailfish {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Pair(sn1, sn2) => write!(f, "[{},{}]", *sn1, sn2),
+            Pair(b) => write!(f, "[{},{}]", b.0, b.1),
             V(v) => write!(f, "{}", v),
         }
     }
@@ -26,7 +60,7 @@ fn parse_snailfish(chars: &mut std::str::Chars<'_>) -> Result<Snailfish, String>
             if chars.next() != Some(']') {
                 return Err("Expected ]".to_string());
             }
-            Ok(Pair(Rc::new(sn1), Rc::new(sn2)))
+            Ok(Pair(Box::new((sn1, sn2))))
         }
         Some(c) => Ok(V(c.to_string().parse::<u8>().map_err(|e| e.to_string())?)),
         None => {
@@ -35,106 +69,122 @@ fn parse_snailfish(chars: &mut std::str::Chars<'_>) -> Result<Snailfish, String>
     }
 }
 
-impl std::str::FromStr for Snailfish {
-    type Err = String;
+// impl std::str::FromStr for Snailfish {
+//     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        parse_snailfish(&mut s.chars())
-    }
-}
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         parse_snailfish(&mut s.chars())
+//     }
+// }
 
 fn read_from_input_file() -> std::io::Result<Vec<Snailfish>> {
     let mut file = File::open("18input")?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    Ok(contents.lines().map(|line| line.parse().unwrap()).collect())
+
+    let mut input = Vec::new();
+    for line in contents.lines() {
+        input.push(parse_snailfish(&mut line.chars()).unwrap());
+    }
+    Ok(input)
 }
 
-fn add_deep_left(sf: &Snailfish, add: u8) -> Snailfish {
+fn add_deep_left(sf: Snailfish, add: u8) -> Snailfish {
+    if add == 0 {
+        return sf;
+    }
     match sf {
-        Pair(sn1, sn2) =>
-            Pair(Rc::new(add_deep_left(sn1, add)), sn2.clone()),
+        Pair(b) =>
+            Pair(Box::new((add_deep_left(b.0, add), b.1))),
         V(v) => V(v + add),
     }
 }
 
-fn add_deep_right(sf: &Snailfish, add: u8) -> Snailfish {
+fn add_deep_right(sf: Snailfish, add: u8) -> Snailfish {
+    if add == 0 {
+        return sf;
+    }
     match sf {
-        Pair(sn1, sn2) =>
-            Pair(sn1.clone(), Rc::new(add_deep_right(sn2, add))),
+        Pair(b) =>
+            Pair(Box::new((b.0, add_deep_right(b.1, add)))),
         V(v) => V(v + add),
     }
 }
 
 impl Snailfish {
-    fn explode(&self, depth: u8) -> Option<(Snailfish, u8, u8)> {
+    fn explode(self, depth: u8) -> Diff<(Snailfish, u8, u8), Snailfish> {
         match self {
-            V(_) => None,
-            Pair(sn1, sn2) => {
+            V(_) => Diff::Same(self),
+            Pair(b) => {
                 if depth > 4 {
-                    if let (V(ref v1), V(ref v2)) = (sn1.as_ref(), sn2.as_ref()) {
-                        return Some((V(0), *v1, *v2));
+                    if let (V(ref v1), V(ref v2)) = b.as_ref() {
+                        return Diff::Changed((V(0), *v1, *v2));
                     }
                 }
 
-                if let Some((new_left, add_left, add_right)) = sn1.explode(depth+1) {
-                    Some((
-                        Pair(
-                            Rc::new(new_left),
-                            Rc::new(add_deep_left(sn2, add_right)),
-                        ),
-                        add_left,
-                        0,
-                    ))
-                } else if let Some((new_right, add_left, add_right)) = sn2.explode(depth+1) {
-                    Some((
-                        Pair(
-                            Rc::new(add_deep_right(sn1, add_left)),
-                            Rc::new(new_right),
-                        ),
-                        0,
-                        add_right,
-                    ))
-                } else {
-                    None
+                match b.0.explode(depth+1) {
+                    Diff::Changed((new_left, add_left, add_right)) => (
+                        Diff::Changed((Pair(Box::new((
+                            new_left,
+                            add_deep_left(b.1, add_right),
+                        ))),
+                                       add_left,
+                                       0,
+                        ))),
+                    Diff::Same(b0) => match b.1.explode(depth+1) {
+                        Diff::Changed((new_right, add_left, add_right)) => (
+                            Diff::Changed((Pair(Box::new((
+                                add_deep_right(b0, add_left),
+                                new_right,
+                            ))),
+                                           0,
+                                           add_right,
+                            ))),
+                        Diff::Same(s) => Diff::Same(s),
+                    }
                 }
             }
         }
     }
 
-    fn split(&self) -> Option<Snailfish> {
+    fn split(self) -> Diff<Snailfish, Snailfish> {
         match self {
             V(v) => {
-                if *v >= 10 {
-                    Some(Pair(Rc::new(V(v/2)), Rc::new(V(v/2 + v%2))))
+                if v >= 10 {
+                    Diff::Changed(Pair(Box::new((V(v/2), V(v/2 + v%2)))))
                 } else {
-                    None
+                    Diff::Same(V(v))
                 }
             }
-            Pair(sn1, sn2) => {
-                if let Some(new_sn1) = sn1.split() {
-                    Some(Pair(Rc::new(new_sn1), sn2.clone()))
-                } else if let Some(new_sn2) = sn2.split() {
-                    Some(Pair(sn1.clone(), Rc::new(new_sn2)))
+            Pair(b) => {
+                if let Diff::Changed(new_sn1) = b.0.split() {
+                    Diff::Changed(Pair(Box::new((new_sn1, b.1))))
+                } else if let Diff::Changed(new_sn2) = b.1.split() {
+                    Diff::Changed(Pair(Box::new((b.0, new_sn2))))
                 } else {
-                    None
+                    Diff::Same(Pair(b))
                 }
             }
         }
     }
 
-    fn reduce(&self) -> Snailfish {
-        let mut fish = self.clone();
-        while let Some(newfish) = fish.explode(1).map(|(f, _, _)| f).or_else(|| fish.split()) {
-            fish = newfish;
+    fn reduce(self) -> Snailfish {
+        let mut fish = self;
+        loop {
+            match fish.explode(1) {
+                Diff::Changed((f, _, _)) => fish = f,
+                Diff::Same(f) => match f.split() {
+                    Diff::Changed(f) => fish = f,
+                    Diff::Same(f) => return f,
+                }
+            }
         }
-        fish
     }
 
-    fn magnitude(&self) -> u16 {
+    fn magnitude(self) -> u16 {
         match self {
-            V(v) => *v as u16,
-            Pair(sn1, sn2) => sn1.magnitude()*3 + sn2.magnitude()*2,
+            V(v) => v as u16,
+            Pair(b) => b.0.magnitude()*3 + b.1.magnitude()*2,
         }
     }
 }
@@ -143,8 +193,8 @@ fn part1(input: &[Snailfish]) -> u16 {
     let mut last_fish: Option<Snailfish> = None;
     for snailfish in input {
         let sf = match last_fish {
-            Some(last_fish) => Pair(Rc::new(last_fish), Rc::new(snailfish.clone())),
-            None => snailfish.clone(),
+            Some(last_fish) => Pair(Box::new((last_fish, *snailfish))),
+            None => *snailfish,
         };
         last_fish = Some(sf.reduce());
     }
@@ -152,14 +202,20 @@ fn part1(input: &[Snailfish]) -> u16 {
 }
 
 fn part2(input: &[Snailfish]) -> u16 {
-    input.iter().map(|f1| {
-        input.iter().map(|f2| {
-            Pair(Rc::new(f1.clone()), Rc::new(f2.clone())).reduce().magnitude()
-        }).max().unwrap()
-    }).max().unwrap()
+    let mut max_v = None;
+    for f1 in input {
+        for f2 in input {
+            let new = Pair(Box::new((*f1, *f2))).reduce().magnitude();
+            max_v = max_v.map(|v: u16| v.max(new)).or(Some(new));
+        }
+    }
+    max_v.unwrap()
 }
 
 fn main() -> std::io::Result<()> {
+    //let mut memory: Vec<_> = (1..100_000).map(|_| (V(0), V(0))).collect();
+    //let mut cons = ConsFn::new(&mut memory);
+
     let input = read_from_input_file()?;
 
     // let sn = "[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]".parse::<Snailfish>().unwrap();
