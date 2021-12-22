@@ -1,44 +1,11 @@
 use std::fs::File;
 use std::io::prelude::*;
 
+#[derive(Clone)]
 enum Snailfish { Pair(Box<(Snailfish, Snailfish)>), V(u8) }
 use Snailfish::*;
 
 enum Diff<C, S> { Changed(C), Same(S) }
-
-impl<C, S> Diff<C, S> {
-    fn try_if_same(self, f: impl Fn(S) -> Diff<C, S>) -> Diff<C, S> {
-        match self {
-            Diff::Changed(s) => Diff::Changed(s),
-            Diff::Same(s) => f(s),
-        }
-    }
-
-    fn map_changed(self, f: impl Fn(C) -> C) -> Diff<C, S> {
-        match self {
-            Diff::Changed(s) => Diff::Changed(f(s)),
-            Diff::Same(s) => Diff::Same(s),
-        }
-    }
-}
-
-// struct ConsFn {
-//     memory: &'a mut [(Snailfish, Snailfish)],
-//     current: usize,
-// }
-
-// impl ConsFn {
-//     fn new(memory: &'a mut [(Snailfish, Snailfish)]) -> ConsFn {
-//         ConsFn { memory, current: 0 }
-//     }
-
-//     fn cons(&'a mut self, sn1: Snailfish, sn2: Snailfish) -> Snailfish {
-//         let new = &mut self.memory[self.current];
-//         *new = (sn1, sn2);
-//         self.current += 1;
-//         Pair(new)
-//     }
-// }
 
 impl std::fmt::Display for Snailfish {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -157,12 +124,17 @@ impl Snailfish {
                 }
             }
             Pair(b) => {
-                if let Diff::Changed(new_sn1) = b.0.split() {
-                    Diff::Changed(Pair(Box::new((new_sn1, b.1))))
-                } else if let Diff::Changed(new_sn2) = b.1.split() {
-                    Diff::Changed(Pair(Box::new((b.0, new_sn2))))
-                } else {
-                    Diff::Same(Pair(b))
+                match b.0.split() {
+                    Diff::Changed(new_sn1) =>
+                        Diff::Changed(Pair(Box::new((new_sn1, b.1)))),
+                    Diff::Same(b0) => {
+                        match b.1.split() {
+                            Diff::Changed(new_sn2) =>
+                                Diff::Changed(Pair(Box::new((b0, new_sn2)))),
+                            Diff::Same(s) =>
+                                Diff::Same(s)
+                        }
+                    }
                 }
             }
         }
@@ -189,23 +161,26 @@ impl Snailfish {
     }
 }
 
-fn part1(input: &[Snailfish]) -> u16 {
+fn part1(input: Vec<Snailfish>) -> u16 {
     let mut last_fish: Option<Snailfish> = None;
     for snailfish in input {
         let sf = match last_fish {
-            Some(last_fish) => Pair(Box::new((last_fish, *snailfish))),
-            None => *snailfish,
+            Some(last_fish) => Pair(Box::new((last_fish, snailfish))),
+            None => snailfish,
         };
         last_fish = Some(sf.reduce());
     }
     last_fish.unwrap().magnitude()
 }
 
-fn part2(input: &[Snailfish]) -> u16 {
+fn part2(input: Vec<Snailfish>) -> u16 {
+    let input2 = input.clone();
     let mut max_v = None;
     for f1 in input {
-        for f2 in input {
-            let new = Pair(Box::new((*f1, *f2))).reduce().magnitude();
+        let input2 = input2.clone();
+        for f2 in input2 {
+            let f1 = f1.clone();
+            let new = Pair(Box::new((f1, f2))).reduce().magnitude();
             max_v = max_v.map(|v: u16| v.max(new)).or(Some(new));
         }
     }
@@ -224,8 +199,8 @@ fn main() -> std::io::Result<()> {
     // println!("{}", sn2);
     // let sn3 = sn2.explode(1).unwrap().0;
     // println!("{}", sn3);
-    println!("Part 1: {}", part1(&input));
-    println!("Part 2: {}", part2(&input));
+    println!("Part 1: {}", part1(input.clone()));
+    println!("Part 2: {}", part2(input.clone()));
 
     Ok(())
 }
