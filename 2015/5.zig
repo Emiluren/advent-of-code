@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const vowels = "aeiou";
+
 pub fn main() !void {
     try part1();
     try part2();
@@ -10,10 +12,6 @@ fn part1() !void {
     defer input_file.close();
 
     const reader = &input_file.reader();
-}
-
-fn part1() !usize {
-    const in_stream = &input_file.inStream();
 
     var nice_strings: usize = 0;
     while (true) {
@@ -105,5 +103,5 @@ fn part2() !void {
     }
 
     const stdout = std.io.getStdOut().writer();
-    try stdout.print("Part 1: {}\n", .{nice_strings});
+    try stdout.print("Part 2: {}\n", .{nice_strings});
 }
