@@ -160,11 +160,9 @@ fn part2(top: &[usize], fishes: &mut Vec<Snailfish>) -> u16 {
 
 fn main() -> std::io::Result<()> {
     let (top, mut fishes) = read_from_input_file()?;
-    let top2 = top.clone();
-    let mut fishes2 = fishes.clone();
 
     println!("Part 1: {}", part1(&top, &mut fishes));
-    println!("Part 2: {}", part2(&top2, &mut fishes2));
+    println!("Part 2: {}", part2(&top, &mut fishes));
 
     Ok(())
 }
