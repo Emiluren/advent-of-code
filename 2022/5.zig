@@ -3,6 +3,7 @@ const std = @import("std");
 const stack_size = 64;
 
 pub fn main() !void {
+    const start_time = std.time.microTimestamp();
     var file = try std.fs.cwd().openFile("5input", .{});
     defer file.close();
 
@@ -56,6 +57,8 @@ pub fn main() !void {
         part2[col] = state2[col].popOrNull() orelse '_';
     }
     std.debug.print("Part 1: {s}\nPart 2: {s}\n", .{part1, part2});
+    const time = std.time.microTimestamp() - start_time;
+    std.debug.print("Time in us: {d}\n", .{time});
 }
 
 fn print_state(state: []std.BoundedArray(u8, stack_size)) void {
