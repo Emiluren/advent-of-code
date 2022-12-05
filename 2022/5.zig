@@ -9,33 +9,24 @@ pub fn main() !void {
     var buf_reader = std.io.bufferedReader(file.reader());
     var in_stream = buf_reader.reader();
 
-    var state1 = [_]std.BoundedArray(u8, stack_size){
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-        try std.BoundedArray(u8, stack_size).init(0),
-    };
+    var state1: [9]std.BoundedArray(u8, stack_size) = undefined;
+    for (state1) |*stack| {
+        stack.* = try std.BoundedArray(u8, stack_size).init(0);
+    }
 
     var level: u8 = 0;
     var buf: [50]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| : (level += 1) {
         if (line[1] == '1') break;
 
-        var col: u8 = 0;
-        while (col*4 + 1 < line.len) : (col += 1) {
+        for (state1) |*stack, col| {
             if (line[col*4] == '[') {
-                try state1[col].append(line[col*4 + 1]);
+                try stack.append(line[col*4 + 1]);
             }
         }
     }
-    var i: u8 = 0;
-    while (i < state1.len) : (i += 1) {
-        std.mem.reverse(u8, state1[i].slice());
+    for (state1) |*stack| {
+        std.mem.reverse(u8, stack.slice());
     }
     _ = try in_stream.readUntilDelimiterOrEof(&buf, '\n'); // Skip empty line
 
@@ -60,8 +51,7 @@ pub fn main() !void {
 
     var part1: [9]u8 = undefined;
     var part2: [9]u8 = undefined;
-    var col: u8 = 0;
-    while (col < 9) : (col += 1) {
+    for (state1) |_, col| {
         part1[col] = state1[col].popOrNull() orelse '_';
         part2[col] = state2[col].popOrNull() orelse '_';
     }
