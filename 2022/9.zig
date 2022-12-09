@@ -14,11 +14,27 @@ pub fn main() !void {
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var head = Pos{ 0, 0, };
-    var tail = head;
-    var grid = std.AutoHashMap(Pos, void).init(allocator);
+    var rope1 = [2]Pos{
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+    };
+    var rope2 = [10]Pos{
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+        Pos{ 0, 0, },
+    };
+    var grid1 = std.AutoHashMap(Pos, void).init(allocator);
+    var grid2 = std.AutoHashMap(Pos, void).init(allocator);
 
-    try grid.put(tail, {});
+    try grid1.put(rope1[1], {});
+    try grid2.put(rope2[rope2.len - 1], {});
 
     //printGrid(head, tail);
     var buf: [5]u8 = undefined;
@@ -38,21 +54,31 @@ pub fn main() !void {
 
         var i: u8 = 0;
         while (i < steps) : (i += 1) {
-            head += head_dir;
-            var delta = head - tail;
-            if (try std.math.absInt(delta[0]) < 2 and try std.math.absInt(delta[1]) < 2) delta = Pos { 0, 0 };
-            if (delta[0] < -1) delta[0] = -1 else if (delta[0] > 1) delta[0] = 1;
-            if (delta[1] < -1) delta[1] = -1 else if (delta[1] > 1) delta[1] = 1;
-            tail += delta;
-            try grid.put(tail, {});
-            //printGrid(head, tail);
+            try stepRope(&rope1, head_dir);
+            try grid1.put(rope1[rope1.len-1], {});
+
+            try stepRope(&rope2, head_dir);
+            try grid2.put(rope2[rope2.len - 1], {});
         }
     }
-    var part1 = grid.count();
-    var part2: usize = 0;
+    var part1 = grid1.count();
+    var part2 = grid2.count();
     std.debug.print("Part 1: {d}\nPart 2: {d}\n", .{part1, part2});
     const time = std.time.microTimestamp() - start_time;
     std.debug.print("Time in µs: {d}\n", .{time});
+}
+
+fn stepRope(rope: []Pos, head_dir: Pos) !void {
+    rope[0] += head_dir;
+    var seg: usize = 1;
+    while (seg < rope.len) : (seg += 1) {
+        var delta = rope[seg-1] - rope[seg];
+        if (try std.math.absInt(delta[0]) < 2 and try std.math.absInt(delta[1]) < 2) delta = Pos { 0, 0 };
+        if (delta[0] < -1) delta[0] = -1 else if (delta[0] > 1) delta[0] = 1;
+        if (delta[1] < -1) delta[1] = -1 else if (delta[1] > 1) delta[1] = 1;
+        rope[seg] += delta;
+    }
+    //printGrid(head, tail);
 }
 
 fn printGrid(head: Pos, tail: Pos) void {
