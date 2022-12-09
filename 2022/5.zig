@@ -58,7 +58,7 @@ pub fn main() !void {
     }
     std.debug.print("Part 1: {s}\nPart 2: {s}\n", .{part1, part2});
     const time = std.time.microTimestamp() - start_time;
-    std.debug.print("Time in us: {d}\n", .{time});
+    std.debug.print("Time in µs: {d}\n", .{time});
 }
 
 fn print_state(state: []std.BoundedArray(u8, stack_size)) void {
