@@ -1,7 +1,7 @@
 import logging
 
 logging.basicConfig(format='%(message)s')
-logging.getLogger().setLevel(logging.DEBUG)
+#logging.getLogger().setLevel(logging.DEBUG)
 
 input = []
 
@@ -20,7 +20,7 @@ def fmt_packet(p):
     return '[' + ','.join(map(fmt_packet, p)) + ']'
 
 
-def is_valid_packet(left, right, depth=0, recur_list=False):
+def cmp_packets(left, right, depth=0, recur_list=False):
     ind = '  ' * depth + '- '
     if not recur_list:
         logging.debug(f'{ind}Compare {fmt_packet(left)} vs {fmt_packet(right)}')
@@ -40,34 +40,52 @@ def is_valid_packet(left, right, depth=0, recur_list=False):
                 logging.debug(ind + 'Right side is smaller, so inputs are not in the right order')
             return right - left
         logging.debug(ind + f'Mixed types; convert left to {[left]} and retry comparison')
-        return is_valid_packet([left], right, depth+1)
+        return cmp_packets([left], right, depth+1)
 
     if isinstance(right, int):
         logging.debug(ind + f'Mixed types; convert right to {[right]} and retry comparison')
-        return is_valid_packet(left, [right], depth+1)
+        return cmp_packets(left, [right], depth+1)
 
     if right == []:
         logging.debug(ind + 'Right side ran out of items, so inputs are not in the right order')
         return -1
 
-    ret = is_valid_packet(left[0], right[0], depth+1)
+    ret = cmp_packets(left[0], right[0], depth+1)
     if ret > 0:
         return 1
     if ret == 0:
-        return is_valid_packet(left[1:], right[1:], depth, True)
+        return cmp_packets(left[1:], right[1:], depth, True)
     return -1
+
 
 def part1():
     sum = 0
     i = 1
     for (left, right) in input:
         logging.debug(f"== Pair {i} ==")
-        if is_valid_packet(left, right) > 0:
+        if cmp_packets(left, right) > 0:
             sum += i
         i += 1
         logging.debug('')
-
     return sum
 
+
+def part2():
+    i2 = 1
+    i6 = 2
+    for (left, right) in input:
+        if cmp_packets(left, [[2]]) > 0:
+            i2 += 1
+        if cmp_packets(right, [[2]]) > 0:
+            i2 += 1
+
+        if cmp_packets(left, [[6]]) > 0:
+            i6 += 1
+        if cmp_packets(right, [[6]]) > 0:
+            i6 += 1
+    return i2 * i6
+
+
 if __name__ == '__main__':
-    print(part1())
+    print('Part 1:', part1())
+    print('Part 2:', part2())
