@@ -28,28 +28,28 @@
 
 (defvar *input* (read-from-input-file "13input"))
 
-(defun valid-packet-p (first-packet second-packet)
-  (format t "comparing ~a vs ~a~%" first-packet second-packet)
-  (etypecase first-packet
-    (null t)
-    (integer (etypecase second-packet
-               (integer (if (< first-packet second-packet)
-                            (values t t)
-                            (= first-packet second-packet)))
-               (list (valid-packet-p (list first-packet) second-packet))))
-    (list (etypecase second-packet
-            (integer (valid-packet-p first-packet (list second-packet)))
-            (list (and (car second-packet)
-                       (multiple-value-bind (first-valid smaller-first)
-                           (valid-packet-p (first first-packet) (first second-packet))
-                         (and first-valid
-                              (or smaller-first
-                                  (valid-packet-p (rest first-packet) (rest second-packet)))))))))))
+(defun valid-packet-p (left right)
+  ;;(format t "comparing ~a vs ~a~%" left right)
+  (etypecase left
+    (null (if (null right) 0 1))
+    (integer (etypecase right
+               (integer (- right left))
+               (list (valid-packet-p (list left) right))))
+    (list (etypecase right
+            (null -1)
+            (integer (valid-packet-p left (list right)))
+            (list (let ((ret (valid-packet-p (first left) (first right))))
+                    (cond ((> ret 0) 1)
+                          ((= ret 0) (valid-packet-p (rest left) (rest right)))
+                          (t -1))))))))
 
 (defun part-1 ()
-  (loop for (first-packet second-packet) in *input*
+  (loop for (left right) in *input*
         for i upfrom 1
-        do (format t "i = ~a~%" i)
-        when (valid-packet-p first-packet second-packet)
+        ;;do (format t "i = ~a~%" i)
+        when (when (>= (valid-packet-p left right) 0)
+               ;;(format t "is valid~%")
+               t)
           sum i
-        do (format t "~%")))
+        ;;do (format t "~%")
+        ))
