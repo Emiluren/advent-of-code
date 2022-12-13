@@ -70,4 +70,4 @@ def part1():
     return sum
 
 if __name__ == '__main__':
-    part1()
+    print(part1())
