@@ -38,19 +38,23 @@
     ("nine" . 9)))
 
 (define (match->number match)
-  (assoc-ref digit-alist (match:substring match)))
+  (assoc-ref digit-alist match))
 
 ;; Part 2
-(define dig-regex (make-regexp "[0-9]|one|two|three|four|five|six|seven|eight|nine"))
+(define text-digits "one|two|three|four|five|six|seven|eight|nine")
+(define dig-regex (make-regexp (string-append "[0-9]|" text-digits)))
+(define last-dig-regex (make-regexp (string-append "[0-9]|" (string-reverse text-digits))))
+
 (with-input-from-file "1input"
   (lambda ()
     (let loop ((line (read-line))
                (sum 0))
       (if (eof-object? line)
           (simple-format #t "Part 2: ~A~%" sum)
-          (let ((matches (map match->number (list-matches dig-regex line))))
-            (simple-format #t "~A ~A ~A ~A~%" (map match:substring (list-matches dig-regex line)) matches (car matches) (car (last-pair matches)))
+          (let ((first-match (match->number (match:substring (regexp-exec dig-regex line))))
+                (last-match (match->number (string-reverse (match:substring (regexp-exec last-dig-regex (string-reverse line)))))))
+            ;(simple-format #t "~A~%" (+ (* 10 first-match) last-match))
             (loop (read-line)
-                  (+ (* 10 (car matches))
-                     (car (last-pair matches))
+                  (+ (* 10 first-match)
+                     last-match
                      sum)))))))
