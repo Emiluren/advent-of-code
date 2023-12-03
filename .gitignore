@@ -12,3 +12,7 @@ a.out
 /*/deps/
 [1-9]input
 [1-9][0-9]input
+
+# Added by cargo
+
+/target
