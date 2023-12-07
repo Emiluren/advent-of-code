@@ -71,10 +71,12 @@ def hand_type2(hand):
     c = Counter(hand)
     mc = c.most_common()
 
-    max0 = mc['J']
+    max0 = c['J']
+    max_not_joker = None
     for card, count in mc:
         if card != 'J':
             max0 += count
+            max_not_joker = card
             break
 
     if max0 == 5:
@@ -82,19 +84,27 @@ def hand_type2(hand):
     elif max0 == 4:
         return 6
 
-    # TODO: Not finished from here down
-    def score3_card():
-        if mc[1][1] == 2: # full house
+    if 'J' in hand:
+        if len(mc) == 3: # full house
             return 5
-        return 4
+        elif max0 == 3:
+            return 4
+        elif c[max_not_joker] == 2 and len(mc) == 3:
+            return 3
+        else:
+            return 2
 
+    # No joker
     match mc[0][1]:
         case 3:
-            return score3_card()
+            if mc[1][1] == 2: # full house
+                return 5
+            return 4
         case 2:
             if mc[1][1] == 2: # two pair
                 return 3
             return 2
+
     return 1
 
 
