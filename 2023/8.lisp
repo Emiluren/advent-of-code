@@ -17,21 +17,6 @@
         for right-node = (subseq line 12 15)
         collect `(,(intern node) . (,(intern left-node) . ,(intern right-node)))))
 
-(defun steps-to-reach (start ends)
-  (cons start
-        (let ((node start))
-          (loop
-            for c in *path*
-            for (left . right) = (alexandria:assoc-value *network* node)
-            do (setf node (if (eq c 'L)
-                              left
-                              right))
-            until (member node ends)
-            collect node))))
-
-(defun part1 ()
-  (length (steps-to-reach 'AAA '(ZZZ))))
-
 (defun collect-ends-with (c)
   (loop
     for (n) in *network*
@@ -41,17 +26,45 @@
 (defparameter *start-nodes* (collect-ends-with #\A))
 (defparameter *end-nodes* (collect-ends-with #\Z))
 
-(defun part2 ()
+(defun get-next (node dir)
+  (destructuring-bind (left . right) (alexandria:assoc-value *network* node)
+      (if (eq dir 'L)
+          left
+          right)))
+
+(defun steps-to-reach (start)
   (loop
-    with nodes = *start-nodes*
+    for node = start then (get-next node c)
+    for c in *path*
     for i from 0
-    for c = (elt *path* (mod i (length *path*)))
-    do (setf nodes
-             (loop
-               for n in nodes
-               for (left . right) = (alexandria:assoc-value *network* n)
-               collect (if (char= c #\L)
-                           left
-                           right)))
-    while (some (lambda (n) (not (member n *end-nodes*))) nodes)
-    finally (return (1+ i))))
+    until (member node *end-nodes*)
+    ;collect node into ns
+    finally (return i)))
+
+(defun part1 ()
+  (steps-to-reach 'AAA))
+
+(defun part2 ()
+  (apply #'lcm (mapcar #'steps-to-reach *start-nodes*)))
+
+
+
+
+
+
+
+;; Some experimentation for part 2
+(defun indices-reached (start)
+  (loop
+    for node = start then (get-next node c)
+    for c in *path*
+    for i from 0 upto 100000
+    if (member node *end-nodes*)
+      collect i))
+
+(defun diff-list (start)
+  (let ((l (indices-reached start)))
+    (mapcar #'- (rest l) (butlast l))))
+
+;; Patterns repeat with intervals, they return to the start every time
+; (13939 17621 19199 15517 12361 20777)
