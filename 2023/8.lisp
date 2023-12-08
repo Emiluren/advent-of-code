@@ -3,7 +3,12 @@
 (ql:quickload :alexandria)
 
 (defparameter *input* (uiop:read-file-lines "8input"))
-(defparameter *path* (first *input*))
+
+(setf *print-circle* t)
+(defparameter *path*
+  (loop for c across (first *input*)
+        collect (intern (string c))))
+(setf (cdr (last *path*)) *path*)
 
 (defparameter *network*
   (loop for line in (nthcdr 2 *input*)
@@ -13,19 +18,19 @@
         collect `(,(intern node) . (,(intern left-node) . ,(intern right-node)))))
 
 (defun steps-to-reach (start ends)
-  (loop
-    with node = start
-    for i from 0
-    for c = (elt *path* (mod i (length *path*)))
-    for (left . right) = (alexandria:assoc-value *network* node)
-    do (setf node (if (char= c #\L)
-                      left
-                      right))
-    while (not (member node ends))
-    finally (return (1+ i))))
+  (cons start
+        (let ((node start))
+          (loop
+            for c in *path*
+            for (left . right) = (alexandria:assoc-value *network* node)
+            do (setf node (if (eq c 'L)
+                              left
+                              right))
+            until (member node ends)
+            collect node))))
 
 (defun part1 ()
-  (steps-to-reach 'AAA '(ZZZ)))
+  (length (steps-to-reach 'AAA '(ZZZ))))
 
 (defun collect-ends-with (c)
   (loop
