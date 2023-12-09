@@ -20,7 +20,14 @@ def location_for_seed(s):
 print('Part 1:', min(location_for_seed(s) for s in seeds))
 
 
-# Original structure gives me a headache, change it to (start, end, offset)
+def combine_maps(m1, m2):
+    m1 = sorted(m1, key=lambda entry: entry[0])
+    m2 = sorted(m2, key=lambda entry: entry[1])
+
+
+
+
+    # Original structure gives me a headache, change it to (start, end, offset)
 maps_alt = [[(src, src+l, dst-src) for dst, src, l in m] for m in maps]
 
 
@@ -33,6 +40,9 @@ def lfs_alt(s):
                 s += offset
                 break
     return s
+
+
+sequential_maps = [sum(([(start, offset), (end, -offset)] for start, end, offset in m), []) for m in maps_alt]
 
 
 # TODO: mistake in this, should combine maps instead of producing new seed ranges
@@ -63,13 +73,37 @@ def map_range(start, end, m):
     return ranges
 
 
+def combine_map_range(start, end, offset, m):
+    i = start
+    ranges = []
+    for m_start, m_end, m_offset in m:
+        if i >= end:
+            break
+
+        if i < m_start:
+            ranges.append((i, m_start - i, offset))
+            i = m_start
+
+        if m_end <= end:
+            ranges.append((i, m_end, offset+m_offset))
+            i = m_end
+        else:
+            ranges.append((i, end, offset+m_offset))
+            i = end
+            break
+
+    if i < end:
+        ranges.append((i, end, offset))
+
+    return ranges
+
 
 seed_ranges = [(seeds[i], seeds[i] + seeds[i+1]) for i in range(0, len(seeds), 2)]
 
 
-srs = seed_ranges
-for m in maps_alt[:1]:
-    new_srs = []
-    for start, end in srs:
-        new_srs += map_range(start, end, m)
-    srs = new_srs
+# srs = seed_ranges
+# for m in maps_alt[:1]:
+#     new_srs = []
+#     for start, end in srs:
+#         new_srs += map_range(start, end, m)
+#     srs = new_srs
