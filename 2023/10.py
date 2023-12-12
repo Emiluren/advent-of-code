@@ -1,4 +1,4 @@
-with open('10input') as f:
+with open('10_test_input') as f:
     world = [line for line in f]
 
 conns = {
@@ -44,6 +44,9 @@ d = sd
 
 positions = set(start_pos)
 
+top = bottom = start_pos[0]
+left = right = start_pos[1]
+
 while True:
     new_pos = add_pos(pos, d)
     if new_pos == start_pos:
@@ -54,6 +57,11 @@ while True:
     row, col = pos
     tile = world[row][col]
 
+    top = min(row, top)
+    bottom = max(row, bottom)
+    left = min(col, left)
+    right = max(col, right)
+
     positions.add(pos)
     for diff in conns[tile]:
         if add_pos(pos, diff) != last_pos:
@@ -61,3 +69,24 @@ while True:
             break
 
 print('Part 1:', loop_length//2 + 1)
+
+area = 0
+
+for r in range(top, bottom+1):
+    # TODO: not enough states F-7 gives wrong result for example
+    inside = False
+    for c in range(left, right+1):
+        if (r, c) in positions:
+            inside = not inside
+            print(world[r][c], end='')
+        else:
+            if inside:
+                area += 1
+                print('I', end='')
+            else:
+                print('O', end='')
+    print()
+
+# 2189 too high
+# 1813
+print('Part 2:', area)
