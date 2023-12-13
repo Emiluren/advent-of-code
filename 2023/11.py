@@ -24,5 +24,11 @@ expanded_galaxies = [(
     c + 2*len([ec for ec in empty_cols if ec < c])
 ) for r, c in galaxies]
 
+dist = 0
+for i, (r1, c1) in enumerate(galaxies[:-1]):
+    for j, (r2, c2) in enumerate(galaxies[i+1:]):
+        d = r2-r1 + abs(c2-c1)
+        dist += d
+        print(f'Between {i+1} and {i+1+j+1}: {d}')
 
-print('Part 1:', sum(r2-r1 + abs(c2-c1) for (i, (r1, c1)) in enumerate(galaxies[:-1]) for r2, c2 in galaxies[i+1:] ))
+print('Part 1:', dist) # 8702870 too low
