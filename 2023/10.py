@@ -1,4 +1,4 @@
-with open('10_test_input') as f:
+with open('10input') as f:
     world = [line for line in f]
 
 conns = {
@@ -42,7 +42,8 @@ sd = start_dirs[0]
 pos = start_pos
 d = sd
 
-positions = set(start_pos)
+positions = set()
+positions.add(start_pos)
 
 top = bottom = start_pos[0]
 left = right = start_pos[1]
@@ -68,23 +69,51 @@ while True:
             d = diff
             break
 
-print('Part 1:', loop_length//2 + 1)
+print('Part 1:', len(positions)//2)
 
 area = 0
 
 for r in range(top, bottom+1):
-    # TODO: not enough states F-7 gives wrong result for example
-    inside = False
+    state = 'outside'
     for c in range(left, right+1):
         if (r, c) in positions:
-            inside = not inside
-            print(world[r][c], end='')
+            tile = world[r][c]
+
+            # NOTE: only for my input
+            if tile == 'S':
+                tile = '|'
+
+            print(tile, end='')
+            if state == 'outside':
+                if tile == '|':
+                    state = 'inside'
+                elif tile == 'F':
+                    state = 'above'
+                elif tile == 'L':
+                    state = 'below'
+            elif state == 'below':
+                if tile == '7':
+                    state = 'inside'
+                elif tile == 'J':
+                    state = 'outside'
+            elif state == 'above':
+                if tile == 'J':
+                    state = 'inside'
+                elif tile == '7':
+                    state = 'outside'
+            elif state == 'inside':
+                if tile == '|':
+                    state = 'outside'
+                elif tile == 'L':
+                    state = 'above'
+                elif tile == 'F':
+                    state = 'below'
         else:
-            if inside:
+            if state == 'inside':
                 area += 1
-                print('I', end='')
+                print('X', end='')
             else:
-                print('O', end='')
+                print('.', end='')
     print()
 
 # 2189 too high
