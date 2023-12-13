@@ -40,4 +40,19 @@ for ((r1, c1), (r2, c2)) in combinations(expanded_galaxies, 2):
     dist += d
     #print(f'Between {i+1} and {i+1+j+1}: {d}')
 
-print('Part 1:', dist) # 8702870 too low, 10187466 too high
+print('Part 1:', dist)
+
+
+expanded_galaxies2 = [(
+    r + 999999*len([er for er in empty_rows if er < r]),
+    c + 999999*len([ec for ec in empty_cols if ec < c])
+) for r, c in galaxies]
+
+from itertools import combinations
+
+dist2 = 0
+for ((r1, c1), (r2, c2)) in combinations(expanded_galaxies2, 2):
+    d = r2-r1 + abs(c2-c1)
+    dist2 += d
+
+print('Part 2:', dist2)
