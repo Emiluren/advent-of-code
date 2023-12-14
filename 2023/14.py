@@ -49,7 +49,7 @@ while True:
     try:
         ind = states.index(cs)
         repeat_length = len(states) - ind
-        print('Part 2:', calc_load(states[1000000000 % repeat_length].splitlines()))
+        print('Part 2:', calc_load(states[ind + (1000000000 - ind) % repeat_length].splitlines()))
         break
     except ValueError:
         states.append(cs)
