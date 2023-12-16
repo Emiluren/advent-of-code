@@ -48,9 +48,9 @@ for p, old in zip(patterns, solutions):
                     p[r][c] = '#'
 
                 for s in sol2:
-                    s2 += s
-                    raise StopIteration
-        print('did not find')
+                    if s != old:
+                        s2 += s
+                        raise StopIteration
     except StopIteration:
         pass
 
