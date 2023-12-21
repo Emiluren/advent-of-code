@@ -1,8 +1,5 @@
 with open('21input') as f:
-    world = [list('#' + line.strip() + '#') for line in f]
-
-wall = [list('#' * len(world[0]))]
-world = wall + world + wall
+    world = [list(line.strip()) for line in f]
 
 for r, line in enumerate(world):
     try:
@@ -12,34 +9,55 @@ for r, line in enumerate(world):
     except ValueError:
         pass
 
-reachable = set()
-explored = set()
+reachable1 = set()
+explored1 = set()
 
 world[s[0]][s[1]] = '.'
 
-def explore(r, c, steps):
+def explore1(r, c, steps):
+    if (r, c, steps) in explored1 or \
+       r < 0 or r >= len(world) or \
+       c < 0 or c >= len(world[0]) or \
+       world[r][c] == '#':
+        return
+    explored1.add((r, c, steps))
+
     if steps == 64:
-        reachable.add((r, c))
+        reachable1.add((r, c))
         return
 
-    def check(r, c):
-        if (r, c, steps+1) not in explored and world[r][c] == '.':
-            explored.add((r, c, steps+1))
-            return True
-        return False
+    explore1(r-1, c, steps+1)
+    explore1(r+1, c, steps+1)
+    explore1(r, c-1, steps+1)
+    explore1(r, c+1, steps+1)
 
-    if check(r-1, c):
-        explore(r-1, c, steps+1)
-    if check(r+1, c):
-        explore(r+1, c, steps+1)
-    if check(r, c-1):
-        explore(r, c-1, steps+1)
-    if check(r, c+1):
-        explore(r, c+1, steps+1)
+explore1(s[0], s[1], 0)
 
-explore(s[0], s[1], 0)
+print('Part 1:', len(reachable1)) # 3718 too low
 
-print('Part 1:', len(reachable)) # 3718 too low
+reachable2 = set()
+explored2 = set()
+
+def explore2(r, c, steps):
+    if (r, c, steps) in explored2 or \
+       world[r % len(world)][c % len(world[0])] == '#':
+        return
+    explored2.add((r, c, steps))
+
+    if steps == 26501365:
+        reachable2.add((r, c))
+        return
+
+    explore2(r-1, c, steps+1)
+    explore2(r+1, c, steps+1)
+    explore2(r, c-1, steps+1)
+    explore2(r, c+1, steps+1)
+
+# import sys
+# sys.setrecursionlimit(100000000)
+# explore2(s[0], s[1], 0)
+
+# print('Part 2:', len(reachable2))
 
 # for r, line in enumerate(world):
 #     for c, t in enumerate(line):
