@@ -59,3 +59,43 @@
          (v2 (cdr e)))
     (* (length (gethash v1 *vert-hashes*))
        (length (gethash v2 *vert-hashes*)))))
+
+
+;; Trying to make it more efficient
+(defun faster-contract-random-edge (edges verts vert-counts)
+  (let* ((e (random-elt edges))
+         (v1 (car e))
+         (v2 (cdr e)))
+    (setf (gethash v1 vert-counts) (+ (gethash v1 vert-counts)
+                                      (gethash v2 vert-counts)))
+    (values (remove-if (lambda (e2) (eq (car e2) (cdr e2)))
+                       (subst v1 v2 (remove e edges)))
+            (remove v2 verts))))
+
+(defun faster-kargers ()
+  (let ((vert-counts (make-hash-table)))
+   (loop for v in *components*
+         do (setf (gethash v vert-counts) 1))
+   (loop with edges = *connections*
+         and verts = *components*
+         while (> (length verts) 2)
+         do (setf (values edges verts) (faster-contract-random-edge edges verts vert-counts))
+         finally (return (values edges verts vert-counts)))))
+
+(defun faster-part1 ()
+  (loop with edges and verts and vert-counts
+        for i from 1
+        do (format t "Iteration ~a: " i)
+           (setf *vert-hashes* (make-hash-table))
+           (setf (values edges verts vert-counts) (faster-kargers))
+           (format t "edge count = ~a~%" (length edges))
+        while (> (length edges) 3)
+        finally (return (* (gethash (caar edges) vert-counts)
+                           (gethash (cdar edges) vert-counts)))))
+
+(defun faster-solve-part1 ()
+  (let* ((e (first (part1)))
+         (v1 (car e))
+         (v2 (cdr e)))
+    (* (length (gethash v1 *vert-hashes*))
+       (length (gethash v2 *vert-hashes*)))))
