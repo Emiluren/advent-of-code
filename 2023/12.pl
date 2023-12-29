@@ -7,7 +7,7 @@ spring(#) --> "#".
 spring(.) --> ".".
 spring(_) --> "?".
 
-line(Springs, Numbers) --> sequence(spring, Springs), " ", sequence(integer, ",", Numbers).
+line(Springs, Numbers) --> string(Springs), " ", sequence(integer, ",", Numbers).
 
 input_lines([S|Sl], [N|Nl]) -->
     line(S, N),
@@ -45,7 +45,22 @@ check_part(['#'|Line], RestLine, N) :-
 line_solution_count(S, N, SolCount) :-
     aggregate_all(count, check_line(S, N), SolCount).
 
+parse_spring(Str, Spring) :-
+    phrase(sequence(spring, Spring), Str).
+
 part1(Sum) :-
-    phrase_from_file(input_lines(Sl, Nl), '12input'),
+    phrase_from_file(input_lines(SlStr, Nl), '12input'),
+    maplist(parse_spring, SlStr, Sl),
     maplist(line_solution_count, Sl, Nl, Counts),
+    sum_list(Counts, Sum).
+
+parse_spring2(Str, Spring) :-
+    append([Str, Str, Str, Str, Str], Str2),
+    phrase(sequence(spring, Spring), Str2).
+
+part2(Sum) :-
+    phrase_from_file(input_lines(SlStr, Nl), '12input'),
+    maplist(parse_spring2, SlStr, Sl),
+    append([Nl, Nl, Nl, Nl, Nl], Nl2),
+    maplist(line_solution_count, Sl, Nl2, Counts),
     sum_list(Counts, Sum).
