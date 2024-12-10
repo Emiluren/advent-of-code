@@ -36,9 +36,13 @@ def checksum(d):
 print('Part 1:', checksum(disk))
 
 end_p = len(disk2) - 1
+while end_p > 0 and disk2[end_p] is None:
+    end_p -= 1
 
-while end_p > 0:
-    while end_p > 0 and disk2[end_p] is None:
+max_id = disk2[end_p]
+
+for current in range(max_id, -1, -1):
+    while disk2[end_p] != current:
         end_p -= 1
 
     block_end = end_p
@@ -52,4 +56,20 @@ while end_p > 0:
         while disk2[free_p] is not None:
             free_p += 1
 
-        if 
+        free_size = 1
+        while disk2[free_p + free_size] is None:
+            free_size += 1
+
+        if free_size >= block_size:
+            break
+        while disk2[free_p] is None:
+            free_p += 1
+
+    if free_p >= end_p:
+        continue
+
+    for i in range(block_size):
+        disk2[free_p + i] = disk2[end_p + i]
+        disk2[end_p + i] = None
+
+print('Part 2:', checksum(disk2))
