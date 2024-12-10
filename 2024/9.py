@@ -13,6 +13,8 @@ for n in input_data:
         id_n += 1
     free_space = not free_space
 
+disk2 = disk[:]
+
 free_p = disk.index(None)
 end_p = len(disk) - 1
 
@@ -28,5 +30,26 @@ while True:
     disk[free_p] = disk[end_p]
     disk[end_p] = None
 
-checksum = sum(i*n for i, n in enumerate(disk) if n is not None)
-print('Part 1:', checksum)
+def checksum(d):
+    return sum(i*n for i, n in enumerate(d) if n is not None)
+
+print('Part 1:', checksum(disk))
+
+end_p = len(disk2) - 1
+
+while end_p > 0:
+    while end_p > 0 and disk2[end_p] is None:
+        end_p -= 1
+
+    block_end = end_p
+    while disk2[end_p - 1] == disk2[end_p]:
+        end_p -= 1
+
+    block_size = block_end - end_p + 1
+
+    free_p = 0
+    while free_p < end_p:
+        while disk2[free_p] is not None:
+            free_p += 1
+
+        if 
