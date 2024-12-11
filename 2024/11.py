@@ -4,25 +4,25 @@ input_str = Path('11input').read_text()
 
 numbers = input_str.split()
 
-def iterate(ns):
-    new_ns = []
-    for n in ns:
-        if n == '0':
-            new_ns.append('1')
-        elif len(n) % 2 == 0:
-            new_ns.append(n[:len(n)//2])
-            new_ns.append(str(int(n[len(n)//2:])))
-        else:
-            new_ns.append(str(int(n)*2024))
-    return new_ns
+def subdivide(n):
+    if n == '0':
+        return ['1']
+    elif len(n) % 2 == 0:
+        return [n[:len(n)//2], str(int(n[len(n)//2:]))]
+    else:
+        return [str(int(n)*2024)]
 
-for i in range(25):
-    numbers = iterate(numbers)
+mem = {}
+def iterate(n, times):
+    if (n, times) in mem:
+        return mem[(n, times)]
 
-print('Part 1:', len(numbers))
+    if times == 0:
+        return 1
 
-# Freezes computer
-# for i in range(50):
-#     numbers = iterate(numbers)
+    result = sum(iterate(n2, times-1) for n2 in subdivide(n))
+    mem[(n, times)] = result
+    return result
 
-# print('Part 2:', len(numbers))
+print('Part 1:', sum(iterate(n, 25) for n in numbers))
+print('Part 2:', sum(iterate(n, 75) for n in numbers))
