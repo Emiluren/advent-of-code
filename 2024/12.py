@@ -43,3 +43,29 @@ def perimeter(island):
 total = sum(len(i) * perimeter(i) for i in all_islands)
 
 print('Part 1:', total)
+
+def perimeter2(island):
+    count = 0
+    for (r, c) in island:
+        if (r+1, c) not in island:
+            if not ((r, c-1) in island and (r+1, c-1) not in island):
+                count += 1
+        if (r-1, c) not in island:
+            if not ((r, c-1) in island and (r-1, c-1) not in island):
+                count += 1
+        if (r, c+1) not in island:
+            if not ((r-1, c) in island and (r-1, c+1) not in island):
+                count += 1
+        if (r, c-1) not in island:
+            if not ((r-1, c) in island and (r-1, c-1) not in island):
+                count += 1
+    return count
+
+total2 = sum(len(i) * perimeter2(i) for i in all_islands)
+# total2 = 0
+# for i in all_islands:
+#     r, c = next(t for t in i)
+#     print(f'{lines[r][c]}: {len(i)} * {perimeter2(i)} = {len(i) * perimeter2(i)}')
+#     total2 += len(i) * perimeter2(i)
+
+print('Part 2:', total2)
