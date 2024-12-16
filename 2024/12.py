@@ -31,21 +31,6 @@ all_islands = {island_from(r, c) for r, c in all_coords}
 def area(c):
     return sum(l.count(c) for l in lines)
 
-def count_edges(ls, c):
-    edge_count = 0
-
-    for i, l in enumerate(ls):
-        for col in range(len(l)):
-            if l[col] != c:
-                continue
-
-            if i == 0 or ls[i-1][col] != c:
-                edge_count += 1
-            if i == len(lines)-1 or ls[i+1][col] != c:
-                edge_count += 1
-
-    return edge_count
-
 def perimeter(island):
     count = 0
     dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
