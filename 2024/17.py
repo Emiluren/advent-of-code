@@ -43,7 +43,7 @@ def run_program(initial_a):
             case 4: # bxc
                 b ^= c
             case 5: # out
-                outputs.append(combo(program[pc+1]) % 8)
+                yield combo(program[pc+1]) % 8
             case 6: # bdv
                 b = a >> combo(program[pc+1])
             case 7: # cdv
@@ -51,7 +51,6 @@ def run_program(initial_a):
 
         if not jumps:
             pc += 2
-    return outputs
 
 print('Part 1:', ','.join(str(i) for i in run_program(a)))
 
@@ -89,17 +88,14 @@ print('Part 1:', ','.join(str(i) for i in run_program(a)))
 #     print(b % 8)
 #     a >>= 3
 
-# 3
-
 def solve(last_a, prog):
     if not prog:
         yield last_a
     else:
         for i in range(8):
             a = (last_a << 3) | i
-            b = (a >> (5 ^ (a % 8))) ^ (a % 8) ^ 3
-            if b % 8 == prog[-1]:
+            if next(run_program(a)) == prog[-1]:
                 yield from solve(a, prog[:-1])
 
-solutions = list(solve(3, program[:-1]))
+solutions = list(solve(0, program))
 print('Part 2:', min(solutions))
