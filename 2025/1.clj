@@ -19,7 +19,7 @@
          count-0 0
          i 0]
     (if (= (abs n) i)
-      [pos count-0]
+      count-0
       (let [new-pos (mod (if (< n 0)
                            (- pos 1)
                            (+ pos 1))
@@ -31,6 +31,4 @@
                (+ i 1))))))
 
 (println "Part 2:"
-         (->> (map passes-of-0 *all-states* *decoded-input*)
-              (map second)
-              (reduce +)))
+         (reduce + (map passes-of-0 *all-states* *decoded-input*)))
