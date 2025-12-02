@@ -22,13 +22,10 @@
             (subs s half-len)))))
 
 (defn invalids [predicate ranges]
-  (->> (for [[start end] ranges
-             x (range start (+ 1 end))]
-         (if (predicate (str x))
-           x
-           0))
-       (filter #(> % 0))
-       vec))
+  (for [[start end] ranges
+        x (range start (+ 1 end))
+        :when (predicate (str x))]
+    x))
 
 (def *test-input* "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124")
 
