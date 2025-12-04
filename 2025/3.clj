@@ -3,14 +3,6 @@
 (def test-input
   "987654321111111\n811111111111119\n234234234234278\n818181911112111")
 
-#_(def s (test-input 0))
-
-(defn find-max-joltage [s]
-  (apply max
-         (for [i (range (count s))
-               j (range (+ i 1) (count s))]
-           (parse-long (str (get s i) (get s j))))))
-
 (defn calc-joltage [s]
   (parse-long (apply str s)))
 
