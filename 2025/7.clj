@@ -32,7 +32,32 @@
 (println "Part 1:"
          (part1 splitter-lines beam-states))
 
+(def test-beams (simulate-beam-states (process-input (slurp "7testinput"))))
+
 ; 10434635933 too low
 ; 25 instead of 40 for testinput
 (println "Part 2:"
          (reduce + (vals (last (simulate-beam-states (process-input (slurp "7testinput")))))))
+
+(defn cols-between [line]
+  (let [sorted-line-keys (sort (keys line))]
+    (cons (first sorted-line-keys)
+          (map - (rest sorted-line-keys) (butlast sorted-line-keys)))))
+
+(defn beam-line-to-seq [line]
+  (mapcat (fn [col-n v] (conj (vec (repeat col-n 0)) v))
+          (cols-between line)
+          (vals line)))
+
+(defn beam-line-str [line col-width]
+  (->> (for [c (beam-line-to-seq line)]
+         (if (= 0 c)
+           (apply str (repeat col-width " "))
+           (format (str \% col-width \d) c)))
+       (apply str)))
+
+(defn print-states [beam-states]
+  (let [max-v (apply max (vals (last beam-states)))
+        col-width (+ 1 (count (str max-v)))]
+   (doseq [l beam-states]
+     (println (beam-line-str l col-width)))))
