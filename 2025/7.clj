@@ -14,17 +14,17 @@
 (defn simulate-beam-states [splitter-lines]
   (reductions (fn [beams splitters]
                 (let [beams-to-split (select-keys beams splitters)]
-                  (merge (apply dissoc beams splitters)
-                         (split-beams beams-to-split))))
+                  (merge-with + (apply dissoc beams splitters)
+                              (split-beams beams-to-split))))
               {(first (first splitter-lines)) 1}
               (rest splitter-lines)))
 
 (defn part1 [splitter-lines beam-states]
   (->> (map (fn [beams splitters]
-                     (count (select-keys beams splitters)))
-                   (butlast beam-states)
-                   (rest splitter-lines))
-              (reduce +)))
+              (count (select-keys beams splitters)))
+            (butlast beam-states)
+            (rest splitter-lines))
+       (reduce +)))
 
 (def splitter-lines (process-input (slurp "7input")))
 (def beam-states (simulate-beam-states splitter-lines))
@@ -34,20 +34,21 @@
 
 (def test-beams (simulate-beam-states (process-input (slurp "7testinput"))))
 
-; 10434635933 too low
-; 25 instead of 40 for testinput
 (println "Part 2:"
-         (reduce + (vals (last (simulate-beam-states (process-input (slurp "7testinput")))))))
+         (reduce + (vals (last beam-states))))
 
 (defn cols-between [line]
-  (let [sorted-line-keys (sort (keys line))]
-    (cons (first sorted-line-keys)
-          (map - (rest sorted-line-keys) (butlast sorted-line-keys)))))
+  (cons (first line)
+        (map #(- %1 %2 1) (rest line) (butlast line))))
+
+#_(println (map first (sort (last test-beams))))
+#_(println (cols-between (map first (sort (last test-beams)))))
 
 (defn beam-line-to-seq [line]
-  (mapcat (fn [col-n v] (conj (vec (repeat col-n 0)) v))
-          (cols-between line)
-          (vals line)))
+  (let [sorted-line (sort line)]
+    (mapcat (fn [col-n v] (conj (vec (repeat col-n 0)) v))
+            (cols-between (map first sorted-line))
+            (map second sorted-line))))
 
 (defn beam-line-str [line col-width]
   (->> (for [c (beam-line-to-seq line)]
@@ -59,5 +60,8 @@
 (defn print-states [beam-states]
   (let [max-v (apply max (vals (last beam-states)))
         col-width (+ 1 (count (str max-v)))]
-   (doseq [l beam-states]
-     (println (beam-line-str l col-width)))))
+    (doseq [l beam-states]
+      (println (beam-line-str l col-width)))))
+
+(print-states test-beams)
+#_(print-states beam-states)
