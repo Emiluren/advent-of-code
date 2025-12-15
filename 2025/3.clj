@@ -6,14 +6,17 @@
 (defn calc-joltage [s]
   (parse-long (apply str s)))
 
-(def find-max-joltage
-  (memoize (fn [s len]
-             (cond
-               (= len 0) ""
-               (= (count s) len) (calc-joltage s)
-               :else (max (find-max-joltage (rest s) len)
-                          (calc-joltage (str (first s)
-                                             (find-max-joltage (rest s) (- len 1)))))))))
+(defmacro defn-memo [name args & body]
+  `(def ~name
+     (memoize (fn ~args
+                ~@body))))
+(defn-memo find-max-joltage [s len]
+  (cond
+    (= len 0) ""
+    (= (count s) len) (calc-joltage s)
+    :else (max (find-max-joltage (rest s) len)
+               (calc-joltage (str (first s)
+                                  (find-max-joltage (rest s) (- len 1)))))))
 
 (defn calc-max-joltage-sum [input len]
   (->> (str/split-lines input)
