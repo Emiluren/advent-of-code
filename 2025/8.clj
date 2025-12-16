@@ -6,7 +6,7 @@
     (->> (str/split l #",")
          (mapv parse-long))))
 
-(defn all-edges [vertices]
+(defn get-all-edges [vertices]
   (->> (for [v1 vertices
              v2 vertices
              :when (not (= v1 v2))]
@@ -49,14 +49,31 @@
           edges))
 
 (def vertices (process-input (slurp "8input")))
+(def all-edges (sort-by dist2-between (get-all-edges vertices)))
 
-(def disj-set (let [edges (sort-by dist2-between (all-edges vertices))]
-                (kruskal vertices (take 1000 edges))))
+(def disj-set-1 (kruskal vertices (take 1000 all-edges)))
 
-(def all-sets
+(def all-sets-1
   (->> (for [v vertices]
-         {(find-root disj-set v) #{v}})
+         {(find-root disj-set-1 v) #{v}})
        (reduce #(merge-with set/union %1 %2))))
 
 (println "Part 1:"
-         (reduce * (take 3 (reverse (sort (map count (vals all-sets)))))))
+         (reduce * (take 3 (reverse (sort (map count (vals all-sets-1)))))))
+
+(defn kruskal-last-edge [vertices edges]
+  (reduce (fn [[disj-set last-edge] [v1 v2]]
+            (let [root1 (find-root disj-set v1)
+                  root2 (find-root disj-set v2)]
+              (if (= root1 root2)
+                [disj-set last-edge]
+                [(union-disj-sets disj-set root1 root2) [v1 v2]])))
+          [(init-disj-set vertices) nil]
+          edges))
+
+(def last-edge (second (kruskal-last-edge vertices all-edges)))
+
+;; 477215970 too low
+(println "Part 2:"
+         (let [[[x1 _ _] [x2 _ _]] last-edge]
+           (* x1 x2)))
